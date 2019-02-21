@@ -27,7 +27,7 @@ class HeightMap(anasysfile.AnasysElement):
         self._special_read = {'Tags': self._read_tags}
         anasysfile.AnasysElement.__init__(self, etree=heightmap)
         #Rearrange data into correct array size
-        self.SampleBase64 = self.SampleBase64.reshape(int(self.Resolution.X), int(self.Resolution.Y))
+        self.SampleBase64 = self.SampleBase64.reshape(int(self.Resolution.Y), int(self.Resolution.X))
 
     def _write_tags(self, elem, nom, tags):
         new_elem = ET.SubElement(elem, nom)
