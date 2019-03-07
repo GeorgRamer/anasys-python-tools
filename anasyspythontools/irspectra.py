@@ -83,6 +83,14 @@ class DataChannel(anasysfile.AnasysElement):
 
     def __init__(self, datachannels):
         anasysfile.AnasysElement.__init__(self, etree=datachannels)
+    @property
+    def wn(self):
+        return float(self["Start"])+np.arange(len(self["SampleBase64"]))/float(self["Resolution"])
+		
+    @property
+    def signal(self):
+        return self["SampleBase64"]
+        
 
 class Background(anasysfile.AnasysElement):
     """Data structure for holding background data"""
