@@ -172,6 +172,8 @@ class AnasysElement(object):
 
     def _decode_bs64(self, data):
         """Returns base64 data decoded in a numpy array"""
+        if data is None:
+            return np.array()
         decoded_bytes = base64.b64decode(data.encode())
         fmt = 'f'*int((len(decoded_bytes)/4))
         structured_data = struct.unpack(fmt, decoded_bytes)
