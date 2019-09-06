@@ -52,9 +52,16 @@ class HeightMap(anasysfile.AnasysElement):
     #         sub.set("Value", v)
     #     return root
 
-    def _plot(self, **kwargs):
+    def _plot(self, global_coords=False, **kwargs):
         """Generates a pyplot image of height map for saving or viewing"""
-        axes = [0, float(self.Size.X), 0, float(self.Size.Y)]
+        if global_coords:
+            width = float(self.Size.X)
+            height = float(self.Size.Y)
+            X0 = float(self.Position.X)
+            Y0 = float(self.Position.Y)
+            axes = [X0 - width/2, X0 + width/2, Y0 - height/2, Y0 + height/2]
+        else:
+            axes = [0, float(self.Size.X), 0, float(self.Size.Y)]
         #Set color bar range to [-y, +y] where y is abs(max(minval, maxval)) rounded up to the nearest 5
         if self.ZMax == 'INF':
             _max = np.absolute(self.SampleBase64).max()
@@ -81,7 +88,7 @@ class HeightMap(anasysfile.AnasysElement):
         plt.gcf().canvas.set_window_title(self.Label)
         return plt
 
-    def show(self, **kwargs):
+    def show(self, global_coords=False, **kwargs):
         """
         Opens an mpl gui window with image data. Options are documented:
         https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.imshow
@@ -94,7 +101,7 @@ class HeightMap(anasysfile.AnasysElement):
             print("Error: No image data in HeightMap object")
             return
         #Do all the plotting
-        img = self._plot(**kwargs)
+        img = self._plot(global_coords=global_coords,**kwargs)
         #Display image
         img.show()
 
