@@ -1,6 +1,7 @@
 from . import anasysfile
 from . import anasysdoc
 from . import heightmap
+from . import image
 from . import irspectra
 from . import anasysio
 

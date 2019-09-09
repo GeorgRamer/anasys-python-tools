@@ -10,6 +10,7 @@
 import xml.etree.ElementTree as ET
 from . import anasysfile
 from . import heightmap
+from . import image
 from . import irspectra
 from . import anasysnanoTA
 
@@ -33,6 +34,7 @@ class AnasysDoc(anasysfile.AnasysElement):
                             #    'Groups': self._write_nanoTA_groups,
                             #    'AFMSettings': self._write_afm_settings}
         self._special_read = {'HeightMaps': self._read_height_maps,
+                              'Images': self._read_images,
                               'RenderedSpectra':self._read_rendered_spectra,
                               'Backgrounds': self._read_backgrounds,
                               'SpectraChannelViews': self._read_spectral_channel_views,
@@ -100,6 +102,16 @@ class AnasysDoc(anasysfile.AnasysElement):
             key = self._check_key(key, mapdict)
             mapdict[key] = new_map
         return mapdict
+    
+    def _read_images(self, images):
+        """Takes an iterable of Images, and returns a dict of Image objects"""
+        imagedict = {}
+        for _image in images:
+            new_image = image.Image(_image)
+            key = new_image.Label
+            key = self._check_key(key, imagedict)
+            imagedict[key] = new_image
+        return imagedict
 
     def _read_spectral_channel_views(self, scvs):
         """Takes an iterable of IRSpectraChannelViews, and returns a dict of IRSpectraChannelViews objects"""
