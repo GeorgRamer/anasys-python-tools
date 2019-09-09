@@ -85,8 +85,6 @@ class Image(anasysfile.AnasysElement):
         # configure style if specified
         if "style" in imshow_args.keys():
             plt.style.use(imshow_args.pop("style"))
-        #Clear and display height image
-        plt.gcf().clear()
         img = plt.imshow(self.SampleBase64, **imshow_args)
         #Set titles
         plt.xlabel('μm')
