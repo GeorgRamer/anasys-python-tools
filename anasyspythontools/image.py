@@ -69,7 +69,7 @@ class Image(anasysfile.AnasysElement):
     #         sub.set("Value", v)
     #     return root
 
-    def _plot(self, global_coords=False, **kwargs):
+    def _plot(self, global_coords=False,ax=None, **kwargs):
         """Generates a pyplot image of image for saving or viewing"""
         if global_coords:
             width = float(self.Size.X)
@@ -83,21 +83,23 @@ class Image(anasysfile.AnasysElement):
         imshow_args = { 'interpolation':'none', 'extent':axes}
         imshow_args.update(kwargs)
         # configure style if specified
+        if ax is None:
+            ax = plt.gca()
         if "style" in imshow_args.keys():
             plt.style.use(imshow_args.pop("style"))
-        img = plt.imshow(self.SampleBase64, **imshow_args)
+        img = ax.imshow(self.SampleBase64, **imshow_args)
         #Set titles
-        plt.xlabel('μm')
-        plt.ylabel('μm')
+        ax.set_xlabel('μm')
+        ax.set_ylabel('μm')
         #Adds color bar with units displayed
         units = self.Units
         if self.UnitPrefix != {}:
             units = self.UnitPrefix + self.Units
         #Set window title
-        plt.gcf().canvas.set_window_title(self.Label)
+        ax.set_title(self.Label)
         return plt
 
-    def show(self, global_coords=False, **kwargs):
+    def show(self, global_coords=False,ax=None, **kwargs):
         """
         Opens an mpl gui window with image data. Options are documented:
         https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.imshow
@@ -110,7 +112,7 @@ class Image(anasysfile.AnasysElement):
             print("Error: No image data in Image object")
             return
         #Do all the plotting
-        img = self._plot(global_coords=global_coords,**kwargs)
+        img = self._plot(global_coords=global_coords,ax=ax, **kwargs)
         #Display image
         img.show()
 
