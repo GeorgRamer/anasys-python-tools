@@ -296,3 +296,19 @@ class AnasysElement(object):
             for child in iterable_obj:
                 new_elem = child._anasys_to_etree(child, name=child._name)
                 parent_etree.append(new_elem)
+    
+    def __eq__(self, other):
+        print("__eq__ called")
+        for attr in set(dir(self) + dir(other)):
+            v1, v2 = [getattr(obj, attr, None) for obj in [self, other]]
+            if v1 is None or v2 is None:
+                print(v1, v2)
+                return False
+            else:
+                if isinstance(v1, np.ndarray) or isinstance(v2, np.ndarray):
+                  if (v1!=v2).any():
+                      return False
+                elif not (v1 == v2) and not ( callable(v1) and callable(v2)):
+                    print(v1, v2)
+                    return False
+        return True
