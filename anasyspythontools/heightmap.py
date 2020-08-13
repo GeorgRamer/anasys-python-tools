@@ -90,7 +90,27 @@ class HeightMap(anasysfile.AnasysElement):
         #Set window title
         ax.set_title(self.Label)
         return img
-
+    
+    
+    def get_x(self, global_coords=False):
+        width = float(self.Size.X)
+        X0 = float(self.Position.X)
+        x_pixels = self.SampleBase64.shape[0]
+        if global_coords:
+            return np.linspace(X0 - width/2, X0 + width/2,x_pixels)
+        else:
+            return np.linspace(0, width, x_pixels)
+    
+    def get_y(self, global_coords=False):
+        height = float(self.Size.Y)
+        Y0 = float(self.Position.Y)
+        y_pixels = self.SampleBase64.shape[1]
+        if global_coords:
+            return np.linspace(Y0 - width/2, Y0 + width/2, y_pixels)
+        else:
+            return np.linspace(0, height, y_pixels)
+            
+    
     def show(self, global_coords=False,colorbar=True, ax=None, **kwargs):
         """
         Opens an mpl gui window with image data. Options are documented:
