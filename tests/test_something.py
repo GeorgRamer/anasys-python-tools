@@ -52,6 +52,7 @@ def get_axd_content(fname, mode='r', encoding='UTF-16'):
     return content.decode('UTF-16')
 
 class TestClass(object):
+    
     def test_that_tests_are_working(self):
         tests_are_working = True
         assert tests_are_working
@@ -65,14 +66,15 @@ class TestClass(object):
         for i in range(len(testkeys)):
             outkeys.append(testobj._check_key(testkeys[i], testdict))
         assert outkeys == goalkeys
-
-    def test_file_lengths_after_reading_and_writing_back_to_axd(self):
+    
+    @pytest.fixture
+    def test_file_lengths_after_reading_and_writing_back_to_axd(self, tempdir):
         failures = []
         files = get_anasys_files_in_test_data_folder()
         for f in files:
             line_count_1 = get_line_count(open_file(f))
             temp = anasys.read(f)
-            temppath = '../scratch/test_' + os.path.basename(f)[:-3] + 'axd'
+            temppath = os.path.join(tempdir, os.path.basename(f)[:-3] + 'axd')
             temp.write(temppath)
             # make output individual files
             line_count_2 = get_line_count(open_file(temppath))
@@ -80,12 +82,12 @@ class TestClass(object):
                 failures.append('FAIL: {} (input lines: {}, output lines: {})'.format(f, line_count_1, line_count_2))
         assert failures == []
 
-    # def test_axz_same_as_axd(self):
-    #     assert anasys.read('test data/EmptyIRDoc.axd') == anasys.read('test data/EmptyIRDoc.axz')
+    #def test_axz_same_as_axd(self):
+    #    assert anasys.read('test data/EmptyIRDoc.axd') == anasys.read('test data/EmptyIRDoc.axz')
 
 
 #
-# _______ comapring XML Stuff ___________
+# _______ comparing XML Stuff ___________
 # import xml.etree.ElementTree as ET   #for parsing XML
 # import copy
 
