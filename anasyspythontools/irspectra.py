@@ -31,7 +31,7 @@ class IRRenderedSpectra(anasysfile.AnasysElement):
         self._wrangle_data_channels(irrenderedspectra)
         self._wrangle_freqwindowmaps(irrenderedspectra)
         anasysfile.AnasysElement.__init__(self, etree=irrenderedspectra)
-        self.Background = self._get_background() #get bg associated with this spectra
+        self._Background = self._get_background() #get bg associated with this spectra
 
     def _wrangle_freqwindowmaps(self, irrenderedspectra):
         new_fwm = ET.SubElement(irrenderedspectra, 'FreqWindowMaps')
@@ -74,7 +74,16 @@ class IRRenderedSpectra(anasysfile.AnasysElement):
         for dc in datachannels.values():
             new_elem = dc._anasys_to_etree(dc, name="DataChannels")
             elem.append(new_elem)
-
+    
+    @property
+    def Background(self):
+        # this is a bit of risky solution:
+        #   background can't be loaded during parsing, because it might not be parsed yet
+        #   This stores it when it first requested. It only works, if the parent has not been GCed yet.
+        if self._Background is None:
+            self._Background = self._get_background()
+        return self._Background
+    
     def _get_background(self):
         try:
             return self._weakref_parent().Backgrounds[self.BackgroundID]
