@@ -15,12 +15,13 @@ import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import filedialog
 from . import anasysfile
+import weakref
 
 class IRRenderedSpectra(anasysfile.AnasysElement):
-    """A data structure for holding HeightMap data"""
+    """A data structure for holding Spectral data"""
 
-    def __init__(self, irrenderedspectra):
-        # self._parent = parent #parent object (Document)
+    def __init__(self, irrenderedspectra, weakref_parent=None):
+        self._weakref_parent = weakref_parent #parent object (Document)
         self._iterable_write = {}
         self._special_write = {'DataChannels': self._write_data_channels,
                                'FreqWindowMaps': self._write_freq_window_maps}
@@ -75,8 +76,12 @@ class IRRenderedSpectra(anasysfile.AnasysElement):
             elem.append(new_elem)
 
     def _get_background(self):
-        #pass
-        return self._parent.Backgrounds[self.BackgroundID]
+        try:
+            return self._weakref_parent().Backgrounds[self.BackgroundID]
+        except AttributeError:
+            # _parent was not set or has been GCed
+            pass
+        return None
 
 class DataChannel(anasysfile.AnasysElement):
     """Data structure for holding spectral Data"""
@@ -104,7 +109,7 @@ class Background(anasysfile.AnasysElement):
     
     @property
     def wn(self):
-        return float(self.IRStartWavenumber) + len(self.Table) * float(self.IRSweepResolution)
+        return float(self.StartWavenumber) + np.arange(len(self.Table)) * float(self.IRSweepResolution)
     
     @property
     def signal(self):
