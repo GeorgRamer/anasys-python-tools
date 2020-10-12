@@ -30,7 +30,7 @@ class IRRenderedSpectra(anasysfile.AnasysElement):
         self._wrangle_data_channels(irrenderedspectra)
         self._wrangle_freqwindowmaps(irrenderedspectra)
         anasysfile.AnasysElement.__init__(self, etree=irrenderedspectra)
-        # self.Background = self._get_background() #get bg associated with this spectra
+        self.Background = self._get_background() #get bg associated with this spectra
 
     def _wrangle_freqwindowmaps(self, irrenderedspectra):
         new_fwm = ET.SubElement(irrenderedspectra, 'FreqWindowMaps')
@@ -75,8 +75,8 @@ class IRRenderedSpectra(anasysfile.AnasysElement):
             elem.append(new_elem)
 
     def _get_background(self):
-        pass
-        # return self._parent.Backgrounds[self.BackgroundID]
+        #pass
+        return self._parent.Backgrounds[self.BackgroundID]
 
 class DataChannel(anasysfile.AnasysElement):
     """Data structure for holding spectral Data"""
@@ -101,6 +101,17 @@ class Background(anasysfile.AnasysElement):
         self._special_read = {'Table': self._serial_tags_to_nparray,
                               'AttenuatorPower': self._serial_tags_to_nparray}
         anasysfile.AnasysElement.__init__(self, etree=background)
+    
+    @attribute
+    def wn(self):
+        return float(self.IRStartWavenumber) + len(self.Table) * float(self.IRSweepResolution)
+    
+    @attribute
+    def signal(self):
+        #Remark: for some reason (maybe to ensure loading/saving doesn't degrade the file?), 
+        # originally, the power meter data was parsed as decimal. For ease of use, this function
+        # return floats.
+        return self.Table.astype(np.float64) / self.AttenuatorPower.astype(np.float64)
     #
     # def _write_table(self, elem, nom, table):
     #     print(self, elem, nom, table)
