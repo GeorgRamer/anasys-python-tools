@@ -102,11 +102,11 @@ class Background(anasysfile.AnasysElement):
                               'AttenuatorPower': self._serial_tags_to_nparray}
         anasysfile.AnasysElement.__init__(self, etree=background)
     
-    @attribute
+    @property
     def wn(self):
         return float(self.IRStartWavenumber) + len(self.Table) * float(self.IRSweepResolution)
     
-    @attribute
+    @property
     def signal(self):
         #Remark: for some reason (maybe to ensure loading/saving doesn't degrade the file?), 
         # originally, the power meter data was parsed as decimal. For ease of use, this function
