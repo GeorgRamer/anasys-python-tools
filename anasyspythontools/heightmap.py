@@ -95,7 +95,7 @@ class HeightMap(anasysfile.AnasysElement):
     def get_x(self, global_coords=False):
         width = float(self.Size.X)
         X0 = float(self.Position.X)
-        x_pixels = self.SampleBase64.shape[0]
+        x_pixels = int(self.Resolution.X)
         if global_coords:
             return np.linspace(X0 - width/2, X0 + width/2,x_pixels)
         else:
@@ -104,7 +104,7 @@ class HeightMap(anasysfile.AnasysElement):
     def get_y(self, global_coords=False):
         height = float(self.Size.Y)
         Y0 = float(self.Position.Y)
-        y_pixels = self.SampleBase64.shape[1]
+        y_pixels = int(self.Resolution.Y)
         if global_coords:
             return np.linspace(Y0 - height/2, Y0 + height/2, y_pixels)
         else:
