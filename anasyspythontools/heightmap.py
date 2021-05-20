@@ -103,10 +103,10 @@ class HeightMap(anasysfile.AnasysElement):
         else:
             return np.linspace(0, width, x_pixels)
 
-    def get_transform(self, global_coords=False, mtransform=False):
+    def get_transform(self, global_coords=False, mtransform=True):
         """returns affine transform between pixels real world dimensions
         global_coords : default False, also shift image?
-        mtransform : default False: return as matplotlib.transforms.Affine2D"""
+        mtransform : default True: return as matplotlib.transforms.Affine2D"""
         scale_x = float(self.Size.X)/float(self.Resolution.X)
         scale_y = float(self.Size.Y)/float(self.Resolution.Y)
         # no docs for anasys rotation. need to check if this is correct
