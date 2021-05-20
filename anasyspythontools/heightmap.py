@@ -10,11 +10,13 @@
 import xml.etree.ElementTree as ET
 import numpy as np
 import matplotlib
-matplotlib.use("TkAgg") #Keeps tk from crashing on final dialog open
+#matplotlib.use("TkAgg") #Keeps tk from crashing on final dialog open
 import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import filedialog
 from . import anasysfile
+
+from matplotlib.transforms import Affine2D
 
 class HeightMap(anasysfile.AnasysElement):
     """A data structure for holding HeightMap data"""
@@ -100,7 +102,38 @@ class HeightMap(anasysfile.AnasysElement):
             return np.linspace(X0 - width/2, X0 + width/2,x_pixels)
         else:
             return np.linspace(0, width, x_pixels)
-    
+
+    def get_transform(self, global_coords=False, mtransform=False):
+        """returns affine transform between pixels real world dimensions
+        global_coords : default False, also shift image?
+        mtransform : default False: return as matplotlib.transforms.Affine2D"""
+        scale_x = float(self.Size.X)/float(self.Resolution.X)
+        scale_y = float(self.Size.Y)/float(self.Resolution.Y)
+        # no docs for anasys rotation. need to check if this is correct
+        rotation = float(self.Rotation.Yaw)
+        translation_x = 0
+        translation_y = 0
+        if global_coords:
+            translation_x = float(self.Position.X) -  float(self.Size.X)/2
+            translation_y = float(self.Position.Y) -  float(self.Size.Y)/2
+        M = np.zeros((3,3))
+        M[2,2] = 1
+        M[0,0] = 1
+        M[1,1] = 1
+        M_scale = M.copy()
+        M_scale[0,0] = scale_x
+        M_scale[1,1] = scale_y
+        M_rotation = M.copy()
+        M_rotation[0,:2] = [np.cos(rotation), -np.sin(rotation)]
+        M_rotation[1,:2] = [np.sin(rotation), np.cos(rotation)]
+        M_translation = M.copy()
+        M_translation[0,2] = translation_x
+        M_translation[1,2] = translation_y
+        M_trans = M_translation@M_rotation@M_scale
+        if mtransform:
+            return Affine2D(M_trans)
+        return M_trans
+
     def get_y(self, global_coords=False):
         height = float(self.Size.Y)
         Y0 = float(self.Position.Y)
