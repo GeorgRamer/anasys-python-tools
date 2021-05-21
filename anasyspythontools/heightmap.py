@@ -110,14 +110,15 @@ class HeightMap(anasysfile.AnasysElement):
         global_coords : default False, also shift image?
         mtransform : default True: return as matplotlib.transforms.Affine2D"""
         scale_x = float(self.Size.X)/float(self.Resolution.X)
-        scale_y = float(self.Size.Y)/float(self.Resolution.Y)
+        # scal_y is negative because the pixels are top to bottom
+        scale_y = -float(self.Size.Y)/float(self.Resolution.Y)
         # no docs for anasys rotation. need to check if this is correct
         rotation = float(self.Rotation.Yaw)
         translation_x = 0
         translation_y = 0
         if global_coords:
             translation_x = float(self.Position.X) -  float(self.Size.X)/2
-            translation_y = float(self.Position.Y) -  float(self.Size.Y)/2
+            translation_y = float(self.Position.Y) +  float(self.Size.Y)/2
         M = np.zeros((3,3))
         M[2,2] = 1
         M[0,0] = 1
