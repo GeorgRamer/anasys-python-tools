@@ -16,6 +16,8 @@ import tkinter as tk
 from tkinter import filedialog
 from . import anasysfile
 
+import base64, tempfile
+
 from matplotlib.transforms import Affine2D
 
 class HeightMap(anasysfile.AnasysElement):
@@ -189,3 +191,26 @@ class HeightMap(anasysfile.AnasysElement):
             return
         #If they made it this far, save (fname given)
         plt.savefig(fname, **kwargs)
+
+    def _repr_png_(self):
+        fig = matplotlib.figure.Figure(figsize=(2,2))
+        ax = fig.add_subplot(111)
+        self.show(ax=ax, global_coords=False)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        canv = matplotlib.backends.backend_agg.FigureCanvasAgg(fig)
+        canv.draw()
+        fig.tight_layout(pad=0)
+        with tempfile.TemporaryFile() as f:
+            fig.savefig(f, format="png", bbox_inches="tight")
+            f.seek(0)
+            byts = f.read()
+        return byts
+
+    def _repr_html_content_(self):
+        b64 =  base64.b64encode(self._repr_png_()).decode("utf8")
+        return "<img src='data:image/png;base64,{b64}'></div>".format(b64=b64)
+    
+    def _repr_html_(self):
+        return "<div>{content}</div>".format(                                       content=self._repr_html_content_())
+        
