@@ -10,10 +10,7 @@
 import xml.etree.ElementTree as ET
 import numpy as np
 import matplotlib
-matplotlib.use("TkAgg") #Keeps tk from crashing on fial dialog open
 import matplotlib.pyplot as plt
-import tkinter as tk
-from tkinter import filedialog
 from . import anasysfile
 import weakref
 

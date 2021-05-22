@@ -10,10 +10,7 @@
 import xml.etree.ElementTree as ET
 import numpy as np
 import matplotlib
-matplotlib.use("TkAgg") #Keeps tk from crashing on final dialog open
 import matplotlib.pyplot as plt
-import tkinter as tk
-from tkinter import filedialog
 from . import anasysfile
 import base64, struct
 
@@ -115,32 +112,4 @@ class Image(anasysfile.AnasysElement):
         img = self._plot(global_coords=global_coords,ax=ax, **kwargs)
         #Display image
         img.show()
-
-    def savefig(self, fname='', **kwargs):
-        """
-        Gets the plot from self._plot(), then saves. Options are documented:
-        https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.savefig
-        """
-        if type(self.SampleBase64) == dict:
-        #Don't do anything if list is empty
-            print("Error: No image data in Image object")
-            return
-        #Do all the plotting
-        img = self._plot()
-        #File types for save
-        ftypes = (("Portable Network Graphics (*.png)", "*.png"),
-                  ("Portable Document Format(*.pdf)", "*.pdf"),
-                  ("Encapsulated Postscript (*.eps)", "*.eps"),
-                  ("Postscript (*.ps)", "*.pdf"),
-                  ("Raw RGBA Bitmap (*.raw;*.rgba)", "*.raw;*.rgba"),
-                  ("Scalable Vector Graphics (*.svg;*.svgz)", "*.svg;*.svgz"),
-                  ("All files", "*.*"))
-        #Test for presense of filename and get one if needed
-        if fname == '':
-            fname = tk.filedialog.asksaveasfilename(filetypes=ftypes, defaultextension=".png", initialfile="Image.png")
-        if fname == '':
-            print("ERROR: User failed to provide filename. Abort save command.")
-            return
-        #If they made it this far, save (fname given)
-        plt.savefig(fname, **kwargs)
  
