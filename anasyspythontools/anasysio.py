@@ -42,7 +42,7 @@ class AnasysFileReader():
         #get the xml data from axz or axd
         if ext == '.axz':
             f_xml = self._open_axz(self._f_path)
-        elif ext == '.axd':
+        elif ext == '.axd' or ext == '.irb':
             f_xml = self._open_axd(self._f_path)
         return f_xml.root
 
@@ -64,6 +64,7 @@ class AnasysFileReader():
             f_data = ET.iterparse(f)
             f_data = self._strip_namespace(f_data)
         return f_data
+    
 
 # def read(fn):
 #     doc = AnasysFileReader(fn)._doc
