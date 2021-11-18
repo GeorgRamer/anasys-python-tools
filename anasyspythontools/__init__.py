@@ -10,4 +10,4 @@ def read(fn):
     if fr._filetype == "full":
     	return anasysdoc.AnasysDoc(fr._doc)
     if fr._filetype == "bg":
-    	return irspectra.Background(fr._doc._etree)
+    	return irspectra.Background(fr._doc)

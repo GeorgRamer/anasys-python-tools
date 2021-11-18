@@ -24,7 +24,7 @@ class AnasysFileReader():
         if ext==".axd" or ext ==".axz":
         	self._filetype = "full"
         if ext ==".irb":
-                self._filetype=="bg"
+                self._filetype = "bg"
         # ET.register_namespace('xsd', "http://www.w3.org/2001/XMLSchema")
         self._doc = self._get_etree(f_name)
         
@@ -59,7 +59,7 @@ class AnasysFileReader():
     def _strip_namespace(self, f_data):
         """strips annoying xmlns data that elementTree auto-prepends to all element tags"""
         for event, el in f_data:
-            el.tag = el.tag.split('}', 1)[-1] #strip namespaces from tags
+            el.tag = el.tag.split('}', -1)[-1] #strip namespaces from tags
         return f_data
 
     def _open_axd(self, _f_path):

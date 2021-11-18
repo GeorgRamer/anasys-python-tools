@@ -28,3 +28,8 @@ class TestBG:
     
     def test_check_equality(self, filename):
         assert apt.read(filename) == apt.read(filename)
+    
+    def test_check_attributes(self, filename):
+        f = apt.read(filename)
+        assert hasattr(f,"wn")
+        assert hasattr(f,"signal")
