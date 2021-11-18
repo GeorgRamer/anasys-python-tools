@@ -7,4 +7,7 @@ from . import anasysio
 
 def read(fn):
     doc = anasysio.AnasysFileReader(fn)._doc
-    return anasysdoc.AnasysDoc(doc)
+    if doc._filetype == "full":
+    	return anasysdoc.AnasysDoc(doc)
+    if doc._filetype == "bg":
+    	return irspectra.Background(doc._etree)

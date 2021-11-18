@@ -14,10 +14,20 @@ import os
 
 class AnasysFileReader():
     """A class for reading Anasys file data"""
+    
+    _filetypes = ["bg", "full"]
+    
     def __init__(self, f_name):
         self._f_types = ['.axd', '.axz', '.irb']
+        ext = self._get_extension(f_name)
+        self._filetype = None
+        if ext==".axd" or ext ==".axz":
+		self._filetype = "full"
+	if ext ==".irb":
+		self._filetype=="bg"
         # ET.register_namespace('xsd', "http://www.w3.org/2001/XMLSchema")
         self._doc = self._get_etree(f_name)
+        
 
     def _get_extension(self, _f_path):
         """Returns the extension of a file, given the file path"""

@@ -36,3 +36,5 @@ class TestClass:
     
     def test_check_equality(self, filename):
         assert apt.read(filename) == apt.read(filename)
+ 
+    
