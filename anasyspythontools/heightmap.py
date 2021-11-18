@@ -10,10 +10,7 @@
 import xml.etree.ElementTree as ET
 import numpy as np
 import matplotlib
-#matplotlib.use("TkAgg") #Keeps tk from crashing on final dialog open
 import matplotlib.pyplot as plt
-import tkinter as tk
-from tkinter import filedialog
 from . import anasysfile
 
 import base64, tempfile
@@ -185,8 +182,6 @@ class HeightMap(anasysfile.AnasysElement):
                   ("Scalable Vector Graphics (*.svg;*.svgz)", "*.svg;*.svgz"),
                   ("All files", "*.*"))
         #Test for presense of filename and get one if needed
-        if fname == '':
-            fname = tk.filedialog.asksaveasfilename(filetypes=ftypes, defaultextension=".png", initialfile="HeightMap.png")
         if fname == '':
             print("ERROR: User failed to provide filename. Abort save command.")
             return

@@ -13,7 +13,7 @@ class TestQuisIpsos:
 
 
 
-TESTFOLDER = "test data"
+TESTFOLDER = os.path.join(os.path.dirname(__file__),"test data")
 filenames =  glob.glob(os.path.join(TESTFOLDER, "*.axd"))\
                         +glob.glob(os.path.join(TESTFOLDER, "*.axz"))
 print(filenames)

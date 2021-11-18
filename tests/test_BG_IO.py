@@ -1,6 +1,12 @@
 
 import anasyspythontools as apt
 import pytest
+import glob
+import os
+
+TESTFOLDER = os.path.join(os.path.dirname(__file__),"test data")
+
+
 
 
 @pytest.mark.parametrize("filename", glob.glob(os.path.join(TESTFOLDER, "*.irb"))) 
