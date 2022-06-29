@@ -16,6 +16,8 @@ import re
 import collections
 import decimal as DC
 
+from functools import wraps
+
 class AnasysElement(object):
 # class AnasysElement(collections.abc.Mapping):
     """Blank object for storing xml data"""
@@ -32,15 +34,18 @@ class AnasysElement(object):
             self._skip_on_write = [] #just in case
         if etree is not None:
             self._etree_to_anasys(etree) #really just parses the hell outta this tree
+        
 
     def __dir__(self):
         """Returns a list of user-accessible attributes"""
         vars_and_funcs = [x for x in object.__dir__(self) if x[0]!='_']
         return vars_and_funcs
 
+
     def __getitem__(self, key):
         """Class attributes can be called by subscription, e.g. Foo['bar']"""
         items = dir(self)
+        # second part needed to prevent infinite recursions
         if key in items:
             return getattr(self, key)
         else:
@@ -49,8 +54,23 @@ class AnasysElement(object):
     def __iter__(self):
         """Makes object iterable. Returns all user-accessible, non-method, attributes"""
         for obj in dir(self):
-            if not callable(self[obj]):
-                yield self[obj]
+            if obj != "attrs":
+                if not callable(self[obj]):
+                    yield self[obj]
+                
+    def _get_iter_attributes(self):
+        for obj in dir(self):
+            if  obj != "attrs":
+                if not callable(self[obj]):
+                    if isinstance(self[obj], AnasysElement):
+                        for sub_obj in self[obj]._get_iter_attributes():
+                            yield "{}.{}".format(obj, sub_obj[0]), sub_obj[1]
+                    else:
+                        yield obj, self[obj]
+    @property            
+    def attrs(self):
+        return dict(self._get_iter_attributes())
+    
 
     def _get_iterator(self, obj):
         """For use with _anasys_to_etree. Returns a dict to iterate over, or None"""
@@ -205,6 +225,7 @@ class AnasysElement(object):
             el = ET.SubElement(root, 'Double')
             el.text=str(x)
         elem.append(root)
+        
 
     def write(self, filename):
         """Writes the current object to file"""
@@ -306,9 +327,26 @@ class AnasysElement(object):
                 return False
             else:
                 if isinstance(v1, np.ndarray) or isinstance(v2, np.ndarray):
-                  if (v1!=v2).any():
-                      return False
+                    if (v1!=v2).any():
+                        return False
                 elif not (v1 == v2) and not ( callable(v1) and callable(v2)):
                     print(v1, v2)
                     return False
         return True
+
+    
+def multi_element_to_dict(datatype, element):
+    ret_dict = {}
+    for child in element:
+        ret_dict[child.tag] = datatype(child.text)
+    return ret_dict
+    
+def multi_element(datatype):
+    def fun(element):
+        return multi_element_to_dict(datatype, element)
+    return fun
+
+def simple_type(datatype):
+    def fun(el):
+        return datatype(el.text)
+    return fun

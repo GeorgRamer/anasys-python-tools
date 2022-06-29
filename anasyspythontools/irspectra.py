@@ -13,6 +13,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from . import anasysfile
 import weakref
+from .anasysfile import multi_element, simple_type
 
 class IRRenderedSpectra(anasysfile.AnasysElement):
     """A data structure for holding Spectral data"""
@@ -23,7 +24,12 @@ class IRRenderedSpectra(anasysfile.AnasysElement):
         self._special_write = {'DataChannels': self._write_data_channels,
                                'FreqWindowMaps': self._write_freq_window_maps}
         self._special_read = {'DataChannels': self._get_data_channels,
-                               'FreqWindowMaps': self._read_freq_window_maps}
+                               'FreqWindowMaps': self._read_freq_window_maps,
+                             "DataPoints":simple_type(int),
+                              'StartWavenumber':simple_type(float),
+                             "EndWavenumber":simple_type(float),
+                             'OffsetWavenumber':simple_type(float), 
+                             'Location': multi_element(float)}
         self._skip_on_write = ['Background'] #objects to skip when writing back to xml
         self._wrangle_data_channels(irrenderedspectra)
         self._wrangle_freqwindowmaps(irrenderedspectra)
@@ -43,6 +49,7 @@ class IRRenderedSpectra(anasysfile.AnasysElement):
             new_datachannels.append(dc)
             irrenderedspectra.remove(dc)
         new_datachannels.tag = 'DataChannels'
+    
 
     def _get_data_channels(self, datachannels):
         """Returns a dict of the DataChannel objects"""
