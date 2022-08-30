@@ -78,3 +78,14 @@ License
 -------
 
 The project is licensed under the MIT license.
+
+Each .py file in this document has a header stating:
+
+.. code-block:: python
+
+  #  Copyright 2017 Cody Schindler <cschindler@anasysinstruments.com>
+  #
+  #  This program is the property of Anasys Instruments, and may not be
+  #  redistributed or modified without explict permission of the author.
+
+To my understanding the MIT license constitutes an "explicit permission" to redistribute and modify. To be on the safe side, I (GeorgRamer) have repeatedly, over a span of several years tried to get confirmation on that from Bruker. I never got a definite answer.
