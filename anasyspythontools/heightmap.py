@@ -12,6 +12,9 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from . import anasysfile
+from .plotting import imshow_transformable, RobustNormalize
+
+from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 
 import base64, tempfile
 
@@ -53,44 +56,93 @@ class HeightMap(anasysfile.AnasysElement):
     #         sub.set("Value", v)
     #     return root
 
-    def _plot(self, global_coords=False, colorbar=True, ax=None, **kwargs):
-        """Generates a pyplot image of height map for saving or viewing"""
-        if global_coords:
-            width = float(self.Size.X)
-            height = float(self.Size.Y)
-            X0 = float(self.Position.X)
-            Y0 = float(self.Position.Y)
-            axes = [X0 - width/2, X0 + width/2, Y0 - height/2, Y0 + height/2]
+    def show(self, global_coords=False, colorbar=True, ax=None, 
+       robust=True, center=False, axes_style="conventional",
+       title=None, **kwargs):
+        """Generates a pyplot image of height map
+        
+        global_coords : bool
+            False: ignore shift and rotation of image
+        
+        colorbar : bool
+            Add colorbar to image
+            
+        ax : matplotlib axes
+            Axes to plot in
+        
+        colorbar : default True
+            add colorbar to image
+            
+        robust : default True
+            normalize using quantiles instead of min and max
+        
+        center : default False
+            make colorbar symmetric around zero
+        
+        axes_style: {"conventional", "microscopy", None}
+            styling for axes: 
+              "conventional" ticks and labeld axes
+              "microscopy" scalebar and no axes labels
+        
+        
+        """
+        if type(self.SampleBase64) == dict:
+            raise ValueError("No image data in HeightMap")
+        
+        if robust:
+            quantiles = None
         else:
-            axes = [0, float(self.Size.X), 0, float(self.Size.Y)]
-        #Set color bar range to [-y, +y] where y is abs(max(minval, maxval)) rounded up to the nearest 5
-        if self.ZMax == 'INF':
-            _max = np.absolute(self.SampleBase64).max()
-            rmax = (_max // 5)*5 + 5
-        else:
-            rmax = float(self.ZMax)/2
-        imshow_args = {'cmap':'gray', 'interpolation':'none', 'extent':axes, 'vmin':-rmax, 'vmax':rmax}
+            quantiles = (0,1)
+        norm = RobustNormalize(quantiles=quantiles, center=center)
+        
+        imshow_args = {'cmap':'gray', 'interpolation':'none', 'datatransform':self.get_transform(global_coords=global_coords),
+        'norm':norm}
         imshow_args.update(kwargs)
         # configure style if specified
-        if "style" in imshow_args.keys():
-            plt.style.use(imshow_args.pop("style"))
         if ax is None:
-            img = plt.imshow(self.SampleBase64, **imshow_args)
-            ax = plt.gca()
-        else:
-            img = ax.imshow(self.SampleBase64, **imshow_args)
-        #Set titles
-        ax.set_xlabel('μm')
-        ax.set_ylabel('μm')
+            _, ax = plt.subplots()
+            
+        imshow_args["ax"] = ax
+        img = imshow_transformable(self.SampleBase64, **imshow_args)
+        
+        self.apply_axes_styling(ax, style=axes_style)
+        
+       
         #Adds color bar with units displayed
         units = self.Units
         if self.UnitPrefix != {}:
             units = self.UnitPrefix + self.Units
         if colorbar:
-            x = plt.colorbar(img,ax=ax).set_label(units)
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", .1)
+            x = ax.figure.colorbar(img,cax=cax).set_label(units)
         #Set window title
-        ax.set_title(self.Label)
+        if title is None:
+            ax.set_title(self.Label)
+        else:
+            ax.set_title(title)
+                
         return img
+        
+    def apply_axes_styling(self, ax, style=None):
+        if style is None:
+            return
+        elif style == "microscopy":
+            from matplotlib_scalebar.scalebar import ScaleBar
+            # remove axis labels, add scale bar, remove axis frame
+            ax.set_xlabel("")
+            ax.set_ylabel("")
+            ax.set_xticks([])
+            ax.set_yticks([])
+            sbar = ScaleBar(1, "µm", location="lower right")
+            ax.add_artist(sbar)
+        elif style == "conventional":
+            # add axes labels and ticks
+            #Set titles
+            ax.set_xlabel('μm')
+            ax.set_ylabel('μm')
+        else:
+           raise ValueError(f"Unknown styling {style}")
     
     
     def get_x(self, global_coords=False):
@@ -104,8 +156,10 @@ class HeightMap(anasysfile.AnasysElement):
 
     def get_transform(self, global_coords=False, mtransform=True):
         """returns affine transform between pixels real world dimensions
-        global_coords : default False, also shift image?
-        mtransform : default True: return as matplotlib.transforms.Affine2D"""
+        global_coords : default False, also apply shift and rotation
+        mtransform : default True
+            True : return as matplotlib.transforms.Affine2D
+            False: return as 3x3 numpy array"""
         scale_x = float(self.Size.X)/float(self.Resolution.X)
         # scal_y is negative because the pixels are top to bottom
         scale_y = -float(self.Size.Y)/float(self.Resolution.Y)
@@ -144,59 +198,19 @@ class HeightMap(anasysfile.AnasysElement):
             return np.linspace(0, height, y_pixels)
             
     
-    def show(self, global_coords=False,colorbar=True, ax=None, **kwargs):
-        """
-        Opens an mpl gui window with image data. Options are documented:
-        https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.imshow
-        Style can be specified with 'style' flag. Options:
-        pyplot.style.options:
-        https://tonysyu.github.io/raw_content/matplotlib-style-gallery/gallery.html
-        """
-        if type(self.SampleBase64) == dict:
-        #Don't do anything if list is empty
-            print("Error: No image data in HeightMap object")
-            return
-        #Do all the plotting
-        img = self._plot(global_coords=global_coords,colorbar=colorbar,ax=ax, **kwargs)
-        #Display image
-        #img.show()
-        return img
 
-    def savefig(self, fname='', **kwargs):
-        """
-        Gets the plot from self._plot(), then saves. Options are documented:
-        https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.savefig
-        """
-        if type(self.SampleBase64) == dict:
-        #Don't do anything if list is empty
-            print("Error: No image data in HeightMap object")
-            return
-        #Do all the plotting
-        img = self._plot()
-        #File types for save
-        ftypes = (("Portable Network Graphics (*.png)", "*.png"),
-                  ("Portable Document Format(*.pdf)", "*.pdf"),
-                  ("Encapsulated Postscript (*.eps)", "*.eps"),
-                  ("Postscript (*.ps)", "*.pdf"),
-                  ("Raw RGBA Bitmap (*.raw;*.rgba)", "*.raw;*.rgba"),
-                  ("Scalable Vector Graphics (*.svg;*.svgz)", "*.svg;*.svgz"),
-                  ("All files", "*.*"))
-        #Test for presense of filename and get one if needed
-        if fname == '':
-            print("ERROR: User failed to provide filename. Abort save command.")
-            return
-        #If they made it this far, save (fname given)
-        plt.savefig(fname, **kwargs)
+
 
     def _repr_png_(self):
-        fig = matplotlib.figure.Figure(figsize=(2,2))
-        ax = fig.add_subplot(111)
-        self.show(ax=ax, global_coords=False)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        canv = matplotlib.backends.backend_agg.FigureCanvasAgg(fig)
-        canv.draw()
-        fig.tight_layout(pad=0)
+        with plt.ioff():
+            from matplotlib.backends.backend_agg import FigureCanvasAgg
+            fig = matplotlib.figure.Figure(figsize=(2,2))
+            canv = FigureCanvasAgg(fig)
+            ax = canv.figure.add_subplot(111)
+            self.show(ax=ax, global_coords=False, axes_style="microscopy", robust=True, center=False)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            canv.draw()
         with tempfile.TemporaryFile() as f:
             fig.savefig(f, format="png", bbox_inches="tight")
             f.seek(0)
