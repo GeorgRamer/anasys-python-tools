@@ -90,7 +90,7 @@ class AnasysDoc(anasysfile.AnasysElement):
         return chandict
 
     def _read_rendered_spectra(self, spectra):
-        spectradict = ReprDict
+        spectradict = ReprDict()
         for spectrum in spectra:
             #pass self as weakref so one spectrum doesn't keep the whole doc in memory
             sp = irspectra.IRRenderedSpectra(spectrum, weakref.ref(self))

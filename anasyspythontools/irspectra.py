@@ -14,6 +14,9 @@ import matplotlib.pyplot as plt
 from . import anasysfile
 import weakref
 from .anasysfile import multi_element, simple_type
+from . import repr_utils
+
+import base64, tempfile
 
 class IRRenderedSpectra(anasysfile.AnasysElement):
     """A data structure for holding Spectral data"""
@@ -95,6 +98,42 @@ class IRRenderedSpectra(anasysfile.AnasysElement):
             # _parent was not set or has been GCed
             pass
         return None
+        
+        
+        
+    def _repr_png_(self):
+        with plt.ioff():
+            from matplotlib.backends.backend_agg import FigureCanvasAgg
+            fig = matplotlib.figure.Figure(figsize=(3,2))
+            canv = FigureCanvasAgg(fig)
+            ax = canv.figure.add_subplot(111)
+            ax.set_xlabel("wavenumbers / $\\mathrm{cm^{-1}}$")
+            ax.invert_xaxis()
+            idx = 0
+            lins = []
+            for channel_name, channel in self.DataChannels.items():
+                if idx!=0:
+                    ax = ax.twinx()
+                idx+=1
+                lins+=ax.plot(channel.wn, channel.signal, color=f"C{idx}", label=channel_name)
+                ax.set_yticks([])
+            fig.legend(lins, [l.get_label() for l in lins],handlelength=0, handletextpad=0, labelcolor="linecolor")
+
+            canv.draw()
+        with tempfile.TemporaryFile() as f:
+            fig.savefig(f, format="png", bbox_inches="tight")
+            f.seek(0)
+            byts = f.read()
+        return byts
+
+    def _repr_html_content_(self):
+        b64 =  base64.b64encode(self._repr_png_()).decode("utf8")
+        return '<div style="float: left;"><img style="height:150px;" src="data:image/png;base64,{b64}"></div><div style="height:200px; overflow-y:hidden; overflow-y:auto; white-space:nowrap;"> {table}</div>'.format(b64=b64, 
+        table=repr_utils.repr_tag_dict_html(self.attrs))
+    
+    def _repr_html_(self):
+        return "<div>{content}</div>".format(
+            content=self._repr_html_content_())
 
 class DataChannel(anasysfile.AnasysElement):
     """Data structure for holding spectral Data"""
@@ -108,6 +147,10 @@ class DataChannel(anasysfile.AnasysElement):
     @property
     def signal(self):
         return self["SampleBase64"]
+        
+        
+        
+
         
 
 class Background(anasysfile.AnasysElement):
@@ -129,7 +172,16 @@ class Background(anasysfile.AnasysElement):
         #Remark: for some reason (maybe to ensure loading/saving doesn't degrade the file?), 
         # originally, the power meter data was parsed as decimal. For ease of use, this function
         # return floats.
-        return self.Table.astype(np.float64) / self.AttenuatorPower.astype(np.float64)
+        try:
+            return self.Table.astype(np.float64) / self.AttenuatorPower.astype(np.float64)
+        except ValueError:
+            # something went wrong while recording. return np.nan to ensure no crashes
+            return np.nan
+        
+        
+        
+
+        
     #
     # def _write_table(self, elem, nom, table):
     #     print(self, elem, nom, table)

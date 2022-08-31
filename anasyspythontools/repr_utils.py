@@ -36,10 +36,9 @@ def repr_tag_dict_html(tag_dict):
     outside ="<table><tbody>{}</tbody></table>"
     items = []
     for k,v in tag_dict.items():
-        if k == "SampleBase64" or k=="Tags":
+        if "SampleBase64" in k or k=="Tags" or ".signal" in k or ".wn" in k:
             continue
         items.append(row_str.format(k,v))
-
     if "Tags" in tag_dict:
         items.append(row_str.format("Tags", ""))
         for k,v in tag_dict["Tags"].items():
