@@ -12,9 +12,9 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from . import anasysfile
-import base64, struct
-
-
+import base64, struct, tempfile
+from .plotting import imshow_transformable, RobustNormalize
+from matplotlib.transforms import Affine2D
 
 class Image(anasysfile.AnasysElement):
     """A data structure for holding Image data"""
@@ -66,76 +66,122 @@ class Image(anasysfile.AnasysElement):
     #         sub.set("Value", v)
     #     return root
 
-    def _plot(self, global_coords=False,ax=None, **kwargs):
+    def show(self, global_coords=False,ax=None,axes_style="conventional",title=None, **kwargs):
         """Generates a pyplot image of image for saving or viewing"""
-        if global_coords:
-            width = float(self.Size.X)
-            height = float(self.Size.Y)
-            X0 = float(self.Position.X)
-            Y0 = float(self.Position.Y)
-            axes = [X0 - width/2, X0 + width/2, Y0 - height/2, Y0 + height/2]
-        else:
-            axes = [0, float(self.Size.X), 0, float(self.Size.Y)]
+        
         #Set color bar range to [-y, +y] where y is abs(max(minval, maxval)) rounded up to the nearest 5
-        imshow_args = { 'interpolation':'none', 'extent':axes}
+        imshow_args = { 'interpolation':'none', 'datatransform':self.get_transform(global_coords=global_coords)}
         imshow_args.update(kwargs)
-        # configure style if specified
         if ax is None:
-            ax = plt.gca()
-        if "style" in imshow_args.keys():
-            plt.style.use(imshow_args.pop("style"))
-        img = ax.imshow(self.SampleBase64, **imshow_args)
+            _, ax = plt.subplots()
+            
+        imshow_args["ax"] = ax
+        img = imshow_transformable(self.SampleBase64, **imshow_args)
+        self.apply_axes_styling(ax, style=axes_style)
         #Set titles
-        ax.set_xlabel('μm')
-        ax.set_ylabel('μm')
-        #Adds color bar with units displayed
-        units = self.Units
-        if self.UnitPrefix != {}:
-            units = self.UnitPrefix + self.Units
-        #Set window title
-        ax.set_title(self.Label)
-        return plt
+        if title is None:
+            ax.set_title(self.Label)
+        else:
+            ax.set_title(title)
+        return img
+        
+    def apply_axes_styling(self, ax, style=None):
+        if style is None:
+            return
+        elif style == "microscopy":
+            from matplotlib_scalebar.scalebar import ScaleBar
+            # remove axis labels, add scale bar, remove axis frame
+            ax.set_xlabel("")
+            ax.set_ylabel("")
+            ax.set_xticks([])
+            ax.set_yticks([])
+            sbar = ScaleBar(1, "µm", location="lower right")
+            ax.add_artist(sbar)
+        elif style == "conventional":
+            # add axes labels and ticks
+            #Set titles
+            ax.set_xlabel('μm')
+            ax.set_ylabel('μm')
+        else:
+           raise ValueError(f"Unknown styling {style}")
+   
+    def get_transform(self, global_coords=False, mtransform=True):
+        """returns affine transform between pixels real world dimensions
+        global_coords : default False, also apply shift and rotation
+        mtransform : default True
+            True : return as matplotlib.transforms.Affine2D
+            False: return as 3x3 numpy array"""
+        scale_x = float(self.Size.X)/float(self.Resolution.X)
+        # scal_y is negative because the pixels are top to bottom
+        scale_y = -float(self.Size.Y)/float(self.Resolution.Y)
+        # no docs for anasys rotation. need to check if this is correct
+        rotation = 0.0
+        translation_x = 0
+        translation_y = 0
+        if global_coords:
+            translation_x = float(self.Position.X) -  float(self.Size.X)/2
+            translation_y = float(self.Position.Y) +  float(self.Size.Y)/2
+        M = np.zeros((3,3))
+        M[2,2] = 1
+        M[0,0] = 1
+        M[1,1] = 1
+        M_scale = M.copy()
+        M_scale[0,0] = scale_x
+        M_scale[1,1] = scale_y
+        M_rotation = M.copy()
+        M_rotation[0,:2] = [np.cos(rotation), -np.sin(rotation)]
+        M_rotation[1,:2] = [np.sin(rotation), np.cos(rotation)]
+        M_translation = M.copy()
+        M_translation[0,2] = translation_x
+        M_translation[1,2] = translation_y
+        M_trans = M_translation@M_rotation@M_scale
+        if mtransform:
+            return Affine2D(M_trans)
+        return M_trans
 
-    def show(self, global_coords=False,ax=None, **kwargs):
-        """
-        Opens an mpl gui window with image data. Options are documented:
-        https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.imshow
-        Style can be specified with 'style' flag. Options:
-        pyplot.style.options:
-        https://tonysyu.github.io/raw_content/matplotlib-style-gallery/gallery.html
-        """
-        if type(self.SampleBase64) == dict:
-        #Don't do anything if list is empty
-            print("Error: No image data in Image object")
-            return
-        #Do all the plotting
-        img = self._plot(global_coords=global_coords,ax=ax, **kwargs)
-        #Display image
-        img.show()
+    def get_y(self, global_coords=False):
+        height = float(self.Size.Y)
+        Y0 = float(self.Position.Y)
+        y_pixels = int(self.Resolution.Y)
+        if global_coords:
+            return np.linspace(Y0 - height/2, Y0 + height/2, y_pixels)
+        else:
+            return np.linspace(0, height, y_pixels)
+            
+    def get_x(self, global_coords=False):
+        width = float(self.Size.X)
+        X0 = float(self.Position.X)
+        x_pixels = int(self.Resolution.X)
+        if global_coords:
+            return np.linspace(X0 - width/2, X0 + width/2,x_pixels)
+        else:
+            return np.linspace(0, width, x_pixels)        
+        
 
-    def savefig(self, fname='', **kwargs):
-        """
-        Gets the plot from self._plot(), then saves. Options are documented:
-        https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.savefig
-        """
-        if type(self.SampleBase64) == dict:
-        #Don't do anything if list is empty
-            print("Error: No image data in Image object")
-            return
-        #Do all the plotting
-        img = self._plot()
-        #File types for save
-        ftypes = (("Portable Network Graphics (*.png)", "*.png"),
-                  ("Portable Document Format(*.pdf)", "*.pdf"),
-                  ("Encapsulated Postscript (*.eps)", "*.eps"),
-                  ("Postscript (*.ps)", "*.pdf"),
-                  ("Raw RGBA Bitmap (*.raw;*.rgba)", "*.raw;*.rgba"),
-                  ("Scalable Vector Graphics (*.svg;*.svgz)", "*.svg;*.svgz"),
-                  ("All files", "*.*"))
-        #Test for presense of filename and get one if needed
-        if fname == '':
-            print("ERROR: User failed to provide filename. Abort save command.")
-            return
-        #If they made it this far, save (fname given)
-        plt.savefig(fname, **kwargs)
+
+
+    def _repr_png_(self):
+        with plt.ioff():
+            from matplotlib.backends.backend_agg import FigureCanvasAgg
+            fig = matplotlib.figure.Figure(figsize=(2,2))
+            canv = FigureCanvasAgg(fig)
+            ax = canv.figure.add_subplot(111)
+            self.show(ax=ax, global_coords=False, axes_style="microscopy", title="")
+            ax.set_xticks([])
+            ax.set_yticks([])
+            canv.draw()
+        with tempfile.TemporaryFile() as f:
+            fig.savefig(f, format="png", bbox_inches="tight")
+            f.seek(0)
+            byts = f.read()
+        return byts
+
+    def _repr_html_content_(self):
+        b64 =  base64.b64encode(self._repr_png_()).decode("utf8")
+        return "<img src='data:image/png;base64,{b64}'></div>".format(b64=b64)
+    
+    def _repr_html_(self):
+        return "<div>{content}</div>".format(
+        content=self._repr_html_content_())
+
  

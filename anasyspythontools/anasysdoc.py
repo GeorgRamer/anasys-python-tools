@@ -13,6 +13,9 @@ from . import heightmap
 from . import image
 from . import irspectra
 from . import anasysnanoTA
+from .repr_dict import ReprDict
+
+
 import weakref
 
 
@@ -87,7 +90,7 @@ class AnasysDoc(anasysfile.AnasysElement):
         return chandict
 
     def _read_rendered_spectra(self, spectra):
-        spectradict = {}
+        spectradict = ReprDict
         for spectrum in spectra:
             #pass self as weakref so one spectrum doesn't keep the whole doc in memory
             sp = irspectra.IRRenderedSpectra(spectrum, weakref.ref(self))
@@ -98,7 +101,7 @@ class AnasysDoc(anasysfile.AnasysElement):
 
     def _read_height_maps(self, maps):
         """Takes an iterable of Height Maps, and returns a dict of HeightMap objects"""
-        mapdict = {}
+        mapdict = ReprDict()
         for _map in maps:
             new_map = heightmap.HeightMap(_map)
             key = new_map.Label
@@ -108,7 +111,7 @@ class AnasysDoc(anasysfile.AnasysElement):
     
     def _read_images(self, images):
         """Takes an iterable of Images, and returns a dict of Image objects"""
-        imagedict = {}
+        imagedict = ReprDict()
         for _image in images:
             new_image = image.Image(_image)
             key = new_image.Label
@@ -128,7 +131,7 @@ class AnasysDoc(anasysfile.AnasysElement):
 
     def _read_backgrounds(self, backgrounds):
         """Returns a list of the Background objects"""
-        bgdict = {}
+        bgdict = ReprDict()
         for bg in backgrounds:
             new_bg = irspectra.Background(bg)
             key = new_bg.ID

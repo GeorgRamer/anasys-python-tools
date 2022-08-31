@@ -15,8 +15,13 @@ from . import anasysfile
 from .plotting import imshow_transformable, RobustNormalize
 
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
-
+from IPython.display import DisplayObject
 import base64, tempfile
+
+
+from . import repr_utils 
+
+
 
 from matplotlib.transforms import Affine2D
 
@@ -199,7 +204,8 @@ class HeightMap(anasysfile.AnasysElement):
             
     
 
-
+    #def _ipython_display_(self):
+    #    display(repr_utils.image_and_tags(self._repr_png_(), self.attrs))
 
     def _repr_png_(self):
         with plt.ioff():
@@ -207,7 +213,8 @@ class HeightMap(anasysfile.AnasysElement):
             fig = matplotlib.figure.Figure(figsize=(2,2))
             canv = FigureCanvasAgg(fig)
             ax = canv.figure.add_subplot(111)
-            self.show(ax=ax, global_coords=False, axes_style="microscopy", robust=True, center=False)
+            self.show(ax=ax, global_coords=False, 
+            axes_style="microscopy", robust=True, center=False, title="")
             ax.set_xticks([])
             ax.set_yticks([])
             canv.draw()
@@ -219,8 +226,10 @@ class HeightMap(anasysfile.AnasysElement):
 
     def _repr_html_content_(self):
         b64 =  base64.b64encode(self._repr_png_()).decode("utf8")
-        return "<img src='data:image/png;base64,{b64}'></div>".format(b64=b64)
+        return '<div style="float: left;"><img style="height:150px;" src="data:image/png;base64,{b64}"></div><div style="height:200px; overflow-y:hidden; overflow-y:auto; white-space:nowrap;"> {table}</div>'.format(b64=b64, 
+        table=repr_utils.repr_tag_dict_html(self.attrs))
     
     def _repr_html_(self):
-        return "<div>{content}</div>".format(                                       content=self._repr_html_content_())
+        return "<div>{content}</div>".format(
+            content=self._repr_html_content_())
         
