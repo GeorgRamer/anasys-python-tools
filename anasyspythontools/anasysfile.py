@@ -65,6 +65,9 @@ class AnasysElement(object):
                     if isinstance(self[obj], AnasysElement):
                         for sub_obj in self[obj]._get_iter_attributes():
                             yield "{}.{}".format(obj, sub_obj[0]), sub_obj[1]
+                    if isinstance(self[obj], dict):
+                        for k,v in self[obj].items():
+                            yield "{}.{}".format(obj, k), v
                     else:
                         yield obj, self[obj]
     @property            
