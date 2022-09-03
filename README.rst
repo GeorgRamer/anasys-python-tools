@@ -24,6 +24,8 @@ Basic Usage
   dir(f) # Displays user-accessible data
   dir(f.HeightMaps)
   
+  
+More useage information can be found in the `examples` folder.
 
 
 Features
@@ -31,10 +33,12 @@ Features
 
 - Read files with .axz, .axd, file extensions
 - Extract AFM spectral and height map images as numpy arrays
+- Export spectra and images to xarray type
 - Quickly display and save your data
 - Use your data with popular Python data libraries and applications (Pandas, Orange3, Jupyter, etc.)
 - Work with your data when you're away from your instruments
 - Evaluate your data in a trasparent and flexible way
+
 
 Installation
 ------------
