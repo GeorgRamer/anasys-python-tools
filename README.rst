@@ -39,9 +39,11 @@ Features
 Installation
 ------------
 
-**From pip or conda**
+**From pip**
 
-Coming soon
+.. code-block:: bash
+  
+  pip install anasyspythontools
 
 
 **From github**
