@@ -1,6 +1,6 @@
 NOTE
 ----
-Please note that this package is currently pre-alpha. Things may break unexpectedly. Please backup all data before use with this package.
+Please note that this package is currently beta. Things may break unexpectedly. Most functions writing to Analysis Studio format have been disabled so I don't see how this package could break your existing data anymore. 
 
 Anasys Python Tools
 ========
@@ -22,6 +22,7 @@ Basic Usage
   # Unsure what the data looks like? Try:
   dir(f) # Displays user-accessible data
   dir(f.HeightMaps)
+  
 
 
 Features

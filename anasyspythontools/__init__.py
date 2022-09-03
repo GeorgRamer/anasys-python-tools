@@ -5,6 +5,9 @@ from . import image
 from . import irspectra
 from . import anasysio
 
+
+__version__ = "0.3.0dev0"
+
 def read(fn):
     fr = anasysio.AnasysFileReader(fn)
     if fr._filetype == "full":
