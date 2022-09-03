@@ -9,6 +9,8 @@ numpy = "*"
 matplotlib-scalebar = "*"
 matplotlib = "*"
 hatch = "*"
+flake8 = "*"
+anasyspythontools = "*"
 
 [dev-packages]
 jupyter = "*"

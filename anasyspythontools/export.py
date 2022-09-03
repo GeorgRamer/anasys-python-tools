@@ -66,11 +66,11 @@ class ExportSettingsReg:
         
     def create_coord_dict(self, anasys_element):
         attrs = anasys_element.attrs
-        return {k: v(attrs[k]) for k,v in self.coords.items() if k in self.coords}
+        return {k: v(attrs.get(k,None)) for k,v in self.coords.items() if k in self.coords}
     
     def create_attr_dict(self, anasys_element):
         attrs = anasys_element.attrs
-        return {k:  v(attrs[k]) for k,v in self.attrs.items() if k in self.attrs}        
+        return {k:  v(attrs.get(k,None)) for k,v in self.attrs.items() if k in self.attrs}        
 
 
 
