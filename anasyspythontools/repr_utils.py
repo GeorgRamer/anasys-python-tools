@@ -54,7 +54,7 @@ def accordion_list(list_of_elements):
 
     element = """
     <div class="accordion-{uuid}">{title}</div>
-<div class="panel">
+<div class="panel-{uuid}">
   {content}
 </div>
     """
