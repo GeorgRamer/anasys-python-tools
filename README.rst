@@ -1,5 +1,6 @@
 NOTE
-----
+-----
+
 Please note that this package is currently beta. Things may break unexpectedly. Most functions writing to Analysis Studio format have been disabled so I don't see how this package could break your existing data anymore. 
 
 Anasys Python Tools
@@ -38,14 +39,13 @@ Features
 Installation
 ------------
 
-From pip or conda
-~~~~~~~~~~~~~~~~~~~~~~
+**From pip or conda**
 
 Coming soon
 
 
-From github
-~~~~~~~~~~~~~~~~~~~~~~
+**From github**
+
 
 Install the latest version:
 
