@@ -49,7 +49,8 @@ classifiers = [
 dependencies = ["scipy>=1.9.1",
                 "matplotlib>=3.5.3",
                 "matplotlib-scalebar>=0.8.1",
-                "numpy>=1.23.2"]
+                "numpy>=1.23.2",
+                "xarray>=2022.6.0"]
 
 [project.urls]
 Homepage = "https://github.com/GeorgRamer/anasys-python-tools"
