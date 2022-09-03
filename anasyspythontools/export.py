@@ -28,7 +28,9 @@ def split_unit_float(value_str):
        Otherwise attempts to convert value float"""
     if isinstance(value_str, numbers.Number):
         return value_str
-    num_part = re.split("[.\s%]+", value_str.strip(" "))[0]
+    if value_str is None or value_str=="":
+        return float("nan")
+    num_part = re.split("[\s%]+", value_str.strip(" "))[0]
     return float(num_part)
     
 
