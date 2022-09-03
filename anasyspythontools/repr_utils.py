@@ -5,7 +5,9 @@ except ModuleNotFoundError:
     widget_available = False
 else:
     widget_available = True
-    
+
+import uuid
+import re
 
 def repr_tag_dict_widget(tag_dict):
     items = []
@@ -48,9 +50,10 @@ def repr_tag_dict_html(tag_dict):
     
     
 def accordion_list(list_of_elements):
+    unique_str = uuid.uuid4().hex
 
     element = """
-    <div class="accordion">{title}</div>
+    <div class="accordion-{uuid}">{title}</div>
 <div class="panel">
   {content}
 </div>
@@ -58,7 +61,7 @@ def accordion_list(list_of_elements):
     header = """<style>
             
             /* Style the buttons that are used to open and close the accordion panel */
-        .accordion {
+        .accordion-{uuid} {
           background-color: #eee;
           color: #444;
           cursor: pointer;
@@ -71,10 +74,10 @@ def accordion_list(list_of_elements):
         }
 
         /* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
-        .active, .accordion:hover {
+        .active, .accordion-{uuid}:hover {
           background-color: #ccc;
         }
-        .panel {
+        .panel-{uuid} {
           padding: 0 18px;
           background-color: white;
           max-height: 0;
@@ -84,7 +87,7 @@ def accordion_list(list_of_elements):
         </style>
 
         <script>
-        var acc = document.getElementsByClassName("accordion");
+        var acc = document.getElementsByClassName("accordion-{uuid}");
         var i;
 
         for (i = 0; i < acc.length; i++) {
@@ -99,8 +102,9 @@ def accordion_list(list_of_elements):
           });
         }
         </script>"""
+    header = re.sub("\{uuid\}", unique_str, header)
         
-    content = [element.format(title=title, content=content) for title, content in list_of_elements]
+    content = [element.format(title=title, content=content,uuid=unique_str) for title, content in list_of_elements]
     return header + "\n".join(content)
     
     
