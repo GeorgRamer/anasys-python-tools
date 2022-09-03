@@ -1,0 +1,63 @@
+[build-system]
+requires = [
+    "hatchling>=1.8.1",
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "anasyspythontools"
+dynamic = [
+    "version",
+]
+description = "A suite of Python tools for use with Analysis Studio AFM-IR files."
+readme = "README.rst"
+license = "MIT"
+requires-python = ">=3.8"
+authors = [
+    { name = "Georg Ramer", email = "georg.ramer@tuwien.ac.at" },
+    { name = "Cody Schindler", email = "cschindler@anasysinstruments.com" },
+]
+keywords = [
+    ".axd",
+    ".axz",
+    "AFM",
+    "Anasys",
+    "Instruments",
+    "atomic",
+    "axd",
+    "axz",
+    "force",
+    "hyperspectral",
+    "infrared",
+    "microscope",
+    "microscope",
+    "microscopy",
+    "s-snom",
+    "spectra",
+    "spectroscopy",
+    "spectrum",
+    "ssnom",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.6",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = ["scipy>=1.9.1",
+                "matplotlib>=3.5.3",
+                "matplotlib-scalebar>=0.8.1",
+                "numpy>=1.23.2"]
+
+[project.urls]
+Homepage = "https://github.com/GeorgRamer/anasys-python-tools"
+
+[tool.hatch.version]
+path = "anasyspythontools/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/anasyspythontools",
+]
