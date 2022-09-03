@@ -5,8 +5,8 @@ import numpy as np
 from collections import namedtuple
 import numbers
 import re
-
-
+import math
+from . import xarray_utils
 
 
 
@@ -33,46 +33,68 @@ def split_unit_float(value_str):
     
 
 
+
+
+
 class ExportSettingsReg:
 
-    _init_height_maps_coords = {"Tags.ScanRate":split_unit_float, "Tags.Setpoint":split_unit_float,
-    "Tags.IGain":float, "Tags.PGain":float, "Tags.ACDriveEnabled":bool, "Tags.ACDriveFrequency":split_unit_float, 
-    "Tags.ACDriveAmplitude":split_unit_float, "Tags.TimeStamp":timeparser}
-    _init_height_maps_attrs = {"ScanMode":str, "TraceRetrace":str}
-    def __init__(self):
-        self._height_maps_coords = self._init_height_maps_coords.copy()
-        self._height_maps_attrs = self._init_height_maps_attrs.copy()
+    def __init__(self, coords, attrs):
+        self._attrs= attrs.copy()
+        self._coords = coords.copy()
         
-    def add_heightmap_coord(self, name, type_conversion):
-        self._height_maps_coords[name] = type_conversion
+    def add__coord(self, name, type_conversion):
+        self._coords[name] = type_conversion
     
-    def del_heightmap_coord(self, name):
-        if name in self._height_maps_coords:
-            del self._height_maps_coords[name]
+    def del_coord(self, name):
+        if name in self._coords:
+            del self._coords[name]
     
-    def add_heightmap_attr(self, name, type_conversion):
-        self._height_maps_attrs[name] = type_conversion
+    def add_attr(self, name, type_conversion):
+        self._attrs[name] = type_conversion
     
-    def del_heightmap_coord(self, name):
-        if name in self._height_maps_attrs:
-            del self._height_maps_attrs[name]
+    def del_coord(self, name):
+        if name in self._attrs:
+            del self._attrs[name]
     @property
-    def heightmap_coords(self):
-        return self._height_maps_coords.copy()
+    def coords(self):
+        return self._coords.copy()
     @property
-    def heightmap_attrs(self):
-        return self._height_maps_attrs.copy()
+    def attrs(self):
+        return self._attrs.copy()
         
         
-    def create_coord_dict(self, anasys_element, parsing_dict, coord):
+        
+    def create_coord_dict(self, anasys_element):
         attrs = anasys_element.attrs
-        return {k: (coord, [v(attrs[k])]) for k,v in parsing_dict.items() if k in attrs}
+        return {k: v(attrs[k]) for k,v in self.coords.items() if k in self.coords}
     
-    def create_attr_dict(self, anasys_element, parsing_dict):
+    def create_attr_dict(self, anasys_element):
         attrs = anasys_element.attrs
-        return {k:  v(attrs[k]) for k,v in parsing_dict.items() if k in attrs}        
-           
-ExportSettings = ExportSettingsReg()
+        return {k:  v(attrs[k]) for k,v in self.attrs.items() if k in self.attrs}        
+
+
+
+_init_height_maps_coords = {"Tags.ScanRate":split_unit_float, "Tags.Setpoint":split_unit_float,
+        "Tags.IGain":float, "Tags.PGain":float, "Tags.ACDriveEnabled":bool, "Tags.ACDriveFrequency":split_unit_float, 
+        "Tags.ACDriveAmplitude":split_unit_float, "TimeStamp":timeparser}
+
+_init_height_maps_attrs = {"Tags.ScanMode":str, "Tags.TraceRetrace":str}
+
+
+ExportSettingsHeightMap = ExportSettingsReg(coords = _init_height_maps_coords,
+                                            attrs = _init_height_maps_attrs)
+
+
+
+_init_rendered_spectra_coords = {'Location.X':float,
+                        'Location.Y':float,
+                        'PulseRate':float,
+                        'TimeStamp':timeparser}
+_init_rendered_spectra_attrs = {'Label':str}
+
+
+ExportSettingsRenderedSpectra = ExportSettingsReg(coords = _init_rendered_spectra_coords,
+                                            attrs = _init_rendered_spectra_attrs)                                            
 
 
 
@@ -140,9 +162,10 @@ class AffineProjectionHandler:
     def decompose_transform(self, transform):
         scale =  np.sqrt(np.sum(transform ** 2, axis=0))[:self.dimensionality]
         translation = transform[0:self.dimensionality, self.dimensionality]
-        rotation = np.atan2(transform[1, 0], transform[0, 0])
-        shear = math.atan2(- self.params[0, 1], self.params[1, 1]) - rotation
-        return namedtuple("affine components", "scale translation rotation shear")(scale=scale,
+        rotation = math.atan2(transform[1, 0], transform[0, 0])
+        shear = math.atan2(- transform[0, 1], transform[1, 1]) - rotation
+        shear = np.mod(shear, np.pi)
+        return namedtuple("affine_components", "scale translation rotation shear")(scale=scale,
                  translation = translation, rotation = rotation, shear = shear)
     
     def compose_transform(self, decomposed_transform, ignore_shear_rotate=False):
@@ -165,9 +188,9 @@ class AffineProjectionHandler:
     def get_dimmed_transform(self, in_dim, in_vars, out_dim, out_vars, ignore_shear_rotate=False):
         trans = self.compose_transform(self.decomposed_transform,
              ignore_shear_rotate=ignore_shear_rotate)
-        return xr.DataArray(trans, dims=(in_dim, out_dim), coords={in_dim:in_vars, out_dim:out_vars})
+        return xr.DataArray(trans, dims=(in_dim, out_dim), coords={in_dim:list(in_vars)+["const"], out_dim:list(out_vars)+["const"]})
        
-    def has_seperatable_dimensions(self, decomposed_transform):
+    def has_seperable_dimensions(self, decomposed_transform):
          if decomposed_transform.shear != 0:
              return False
          if not (np.isclose(np.mod(decomposed_transform.rotation, np.pi/4),0)):
@@ -175,7 +198,7 @@ class AffineProjectionHandler:
          return True
     
     def _perform_projection(self, coord_array, ignore_shear_rotate):
-        "performs projection. assumes 'spatial_vars' is the dim containing spatial variables"
+        "performs projection. assumes 'spatial_var' is the dim containing spatial variables"
         coord_array=coord_array.transpose(..., "spatial_var")
         
         
@@ -183,46 +206,79 @@ class AffineProjectionHandler:
                             out_dim="spatial_var_out", out_vars=coord_array.coords["spatial_var"].to_numpy(),
                             ignore_shear_rotate=ignore_shear_rotate)
         
-        return (trans @ coord_array).swap_dims({"spatial_var_out":"spatial_var"})
+        return (trans @ coord_array).rename({"spatial_var_out":"spatial_var"})
     
-    def _project_1ds_1ds(self, coord1, coord2, coord1_outname=None, coord2_outname=None, ignore_shear_rotate=False):
+    #def _project_1ds_1ds(self, coord1, coord2, coord1_outname=None, coord2_outname=None, ignore_shear_rotate=False):
+    #    if not self.is_seperable and not ignore_shear_rotate:
+    #        raise ValueError("This transform does not allow 1D outputs")
+    #    ds = xr.Dataset({"coord1":coord1, "coord2":coord2})
+    #    stacked_array, swap_dict = xarray_utils.stack_ds_vars(ds, "spatial_var")
+    #    stacked_array = stacked_array.transpose(..., "spatial_var").sortby("spatial_var")
+    #    project_array = self._perform_projection(stacked_array, ignore_shear_rotate=ignore_shear_rotate)
+    #    ds = xarray_utils.unstack_ds_vars(project_array, swap_dict, "spatial_var")
+    #    if coord1_outname is not None:
+    #        ds = ds.rename({"coord1":coord1_outname})
+    #    if coord2_outname is not None:
+    #        ds = ds.rename({"coord2":coord2_outname}) 
+    #    return dict(ds.variables)
+        
+        
+    def _project_seperately(self, coord1, coord2, 
+           coord1_outname=None, coord2_outname=None, ignore_shear_rotate=False):
         if not self.is_seperable and not ignore_shear_rotate:
             raise ValueError("This transform does not allow 1D outputs")
-        ds = xr.Dataset({"coord1":coord1, "coord2":coord2})
-        stacked_array, swap_dict = xarray_utils.stack_ds_vars(ds, "spatial_vars")
-        stacked_array = stacked_array.transpose(..., "spatial_vars").sortby("spatial_vars")
-        project_array = self._perform_projection(stacked_array, ignore_shear_rotate=ignore_shear_rotate)
-        ds = xarray_utils.unstack_ds_vars(project_array, swap_dict)
-        if coord1_outname is not None:
-            ds = ds.rename({"coord1":coord1_outname})
-        if coord2_outname is not None:
-            ds = ds.rename({"coord2":coord2_outname}) 
-        return dict(ds.variables)
+        transform = self.compose_transform(self.decomposed_transform,
+             ignore_shear_rotate=ignore_shear_rotate)
+        coord1 = coord1*transform[0,0] + transform[0,2]
+        coord2 = coord2*transform[1,1] + transform[1,2]
+        if coord1_outname is None:
+            coord1_outname = "coord1"
+        if coord2_outname is None:
+            coord2_outname = "coord2"
+        return {coord1_outname:coord1, coord2_outname:coord2}
+        
         
     def _project_2ds(self, coord1, coord2, coord1_outname=None, coord2_outname=None, ignore_shear_rotate=False):      
         ds = xr.Dataset({"coord1":coord1, "coord2":coord2})
-        stacked_array = ds.to_array("spatial_vars")
-        stacked_array = stacked_array.transpose(..., "spatial_vars").sortby("spatial_vars")
+        stacked_array = ds.to_array("spatial_var")
+        stacked_array = stacked_array.transpose(..., "spatial_var").sortby("spatial_var")
         project_array = self._perform_projection(stacked_array, ignore_shear_rotate=ignore_shear_rotate)
-        ds = project_array.to_dataset("spatial_vars")
+        ds = project_array.to_dataset("spatial_var")
         if coord1_outname is not None:
             ds = ds.rename({"coord1":coord1_outname})
         if coord2_outname is not None:
             ds = ds.rename({"coord2":coord2_outname}) 
         return dict(ds.variables)
              
-    def project_coordinates(coord1, coord2, coord1_outname=None, coord2_outname=None, ignore_shear_rotate=False):
+    def project_coordinates(self, coord1, coord2, coord1_outname=None, coord2_outname=None, ignore_shear_rotate=False):
         if len(coord1.dims)==1 and len(coord2.dims)==1:
             if self.is_seperable or ignore_shear_rotate:
-                return self._project_1ds_1ds(coord1=coord1, 
+                return self._project_seperately(coord1=coord1, 
                                              coord2=coord2,
                                              coord1_outname=coord1_outname,
+                                             coord2_outname=coord2_outname,
                                              ignore_shear_rotate=ignore_shear_rotate)
         return self._project_2ds(coord1=coord1, 
                                  coord2=coord2,
                                  coord1_outname=coord1_outname,
+                                 coord2_outname=coord2_outname,
                                  ignore_shear_rotate=ignore_shear_rotate)
     
+def create_projected_coords(xr_obj, transform=None, 
+                            name_coord1 = "xpix", name_coord2 = "ypix", 
+                            name_new_coord1 ="X", name_new_coord2="Y",
+                            ignore_shear_rotate=False):
+    if transform is None:
+        transform = xr_obj.attrs["transform"]
+    if isinstance(transform, str):
+        transform = xr_obj.attrs[transform]
+    aph = AffineProjectionHandler(transform)
+    proj_coords = aph.project_coordinates(coord1=xr_obj[name_coord1],
+                                          coord2=xr_obj[name_coord2],
+                                          coord1_outname = name_new_coord1,
+                                          coord2_outname = name_new_coord2,
+                                          ignore_shear_rotate = ignore_shear_rotate)
+    return xr_obj.assign_coords(proj_coords)
     
     
 
@@ -235,15 +291,15 @@ def image_to_DataArray(image, include_name=False):
     arr = xr.DataArray(image.SampleBase64,
                        dims=("y","x"),
                        coords={"xpix":("x", xpix), "ypix":("y", ypix), 
-                              }).expand_dims("img_idx")
+                              })
                               
     
     arr.attrs["TimeStamp"] = timeparser(image.TimeStamp)
     arr.attrs["transform"] = transform
     arr.attrs["Label"] = image.Label + " ({})".format(image.Tags["TraceRetrace"])
     
-    arr = arr.assign_coords(ExportSettings.create_coord_dict(image, ExportSettings.heightmap_coords, "img_idx"))
-    arr = arr.assign_attrs(ExportSettings.create_attr_dict(image, ExportSettings.heightmap_attrs))
+    arr = arr.assign_coords(ExportSettingsHeightMap.create_coord_dict(image))
+    arr = arr.assign_attrs(ExportSettingsHeightMap.create_attr_dict(image))
     
     
     if include_name:
@@ -257,14 +313,8 @@ def imagelist_to_Dataset(image_list):
     image_list: list of images, this 
     
     returns xarray.Dataset with dims xpix and ypix and coordinates xy of the image position"""
-    
     data_vars = [image_to_DataArray(img, True) for img in image_list]
-    attrs = image_list[0].Tags
-    attrs["TimeStamp"] = timeparser(image_list[0].TimeStamp)
-    #attrs["transform"] = image_list[0].get_transform(global_coords=True, 
-    #                                                 mtransform=False)
-    attrs["Label"] = image_list[0].Label+ " ({})".format(image_list[0].Tags["TraceRetrace"])
-    return xr.Dataset(data_vars=dict(data_vars), attrs=attrs)
+    return xr.Dataset(data_vars=dict(data_vars), attrs=data_vars[0][1].attrs.copy())
 
 
 def attr_to_DataArray(spectrum):
@@ -291,13 +341,12 @@ def channel_to_DataArray(channel):
 def spectrum_to_Dataset(spectrum):
     chans = {channel:channel_to_DataArray(spectrum.DataChannels[channel]) for channel in spectrum.DataChannels} 
     chans["Background"] =  xr.DataArray(spectrum.Background.signal, dims=("wavenumbers"), coords=(("wavenumbers", spectrum.Background.wn),))
-    chans.update(attrs_to_DataArray_dict(spectrum))
-    ds =  xr.Dataset(chans)
-    #ds = ds.assign_coords({"X":("x_pos", [ds["Location.X"].values]),"Y": ("y_pos",[ds["Location.Y"].values])})
+    ds =  xr.Dataset(chans).assign_attrs(ExportSettingsRenderedSpectra.create_attr_dict(spectrum))\
+            .assign_coords(ExportSettingsRenderedSpectra.create_coord_dict(spectrum))
+
     return ds
 
 
 
-
 def spectra_list_to_Dataset(spectra_list):
-    return xr.concat([spectrum_to_Dataset(spectrum) for spectrum in spectra_list], dim="spectral_index", coords="all", data_vars="all").drop_dims("dim_0")
+    return xr.concat([spectrum_to_Dataset(spectrum) for spectrum in spectra_list], dim="spectral_index", coords="all", data_vars="all")

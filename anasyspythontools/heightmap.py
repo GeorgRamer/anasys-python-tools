@@ -30,6 +30,7 @@ class HeightMap(anasysfile.AnasysElement):
 
     def __init__(self, heightmap):
         # self._parent = parent
+        self.thumbnail = None
         self._iterable_write = {}
         self._special_write = {'Tags': self._write_tags}
         self._skip_on_write = []
@@ -206,15 +207,17 @@ class HeightMap(anasysfile.AnasysElement):
 
     #def _ipython_display_(self):
     #    display(repr_utils.image_and_tags(self._repr_png_(), self.attrs))
-
+        
     def _repr_png_(self):
+        if not self.thumbnail is None:
+            return self.thumbnail
         with plt.ioff():
             from matplotlib.backends.backend_agg import FigureCanvasAgg
-            fig = matplotlib.figure.Figure(figsize=(2,2))
+            fig = matplotlib.figure.Figure(figsize=(2,2), dpi=60)
             canv = FigureCanvasAgg(fig)
             ax = canv.figure.add_subplot(111)
             self.show(ax=ax, global_coords=False, 
-            axes_style="microscopy", robust=True, center=False, title="")
+            axes_style="microscopy", robust=True, center=False, title="",resample=False, interpolation="none")
             ax.set_xticks([])
             ax.set_yticks([])
             canv.draw()
@@ -222,6 +225,7 @@ class HeightMap(anasysfile.AnasysElement):
             fig.savefig(f, format="png", bbox_inches="tight")
             f.seek(0)
             byts = f.read()
+        self.thumbnail = byts
         return byts
 
     def _repr_html_content_(self):
