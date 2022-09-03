@@ -32,8 +32,8 @@ def image_and_tags_widget(image, tag_dict, height="100px"):
 
 
 def repr_tag_dict_html(tag_dict):
-    row_str = "<tr><td>{}</td><td>{}</td></tr>"
-    outside ="<table><tbody>{}</tbody></table>"
+    row_str = "<tr><td>{}</td><td style='width:70%; align:left;'>{}</td></tr>"
+    outside ="<table style='width:75%'><tbody>{}</tbody></table>"
     items = []
     for k,v in tag_dict.items():
         if "SampleBase64" in k or k=="Tags" or ".signal" in k or ".wn" in k:

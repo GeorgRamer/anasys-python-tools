@@ -19,6 +19,9 @@ import decimal as DC
 from functools import wraps
 
 class AnasysElement(object):
+
+
+    __ignored_attrs__ = ["thumbnail"]
 # class AnasysElement(collections.abc.Mapping):
     """Blank object for storing xml data"""
     def __init__(self, parent_obj=None, etree=None):
@@ -61,7 +64,7 @@ class AnasysElement(object):
     def _get_iter_attributes(self):
         for obj in dir(self):
             if  obj != "attrs":
-                if not callable(self[obj]):
+                if not callable(self[obj]) and not obj in self.__ignored_attrs__:
                     if isinstance(self[obj], AnasysElement):
                         for sub_obj in self[obj]._get_iter_attributes():
                             yield "{}.{}".format(obj, sub_obj[0]), sub_obj[1]
@@ -72,6 +75,7 @@ class AnasysElement(object):
                         yield obj, self[obj]
     @property            
     def attrs(self):
+        """convenience function to get all attributes as nice dict"""
         return dict(self._get_iter_attributes())
     
 
