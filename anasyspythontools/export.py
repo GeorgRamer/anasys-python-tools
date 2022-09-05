@@ -148,23 +148,41 @@ def pix_to_xy(xpix, ypix, transform_matrix):
 
 
 
+
     
 
 def image_to_DataArray(image, include_name=False):
+    """ export a HeightMap or Image to a DataArray"""
+    
+    
     ypix = np.arange(image.SampleBase64.shape[0])
     xpix = np.arange(image.SampleBase64.shape[1])
+    
+    is_RGB = len( image.SampleBase64.shape)==3
+    
+    dims = ["y", "x"]
+    coords = {"xpix":("x", xpix), "ypix":("y", ypix)}
+    
+    if is_RGB:
+        dims.append("color")
+        coords.update({"color":["R","G","B", "A"]})
+    
     transform = image.get_transform(global_coords=True, 
                                     mtransform=False)
     
+   
+    
     arr = xr.DataArray(image.SampleBase64,
-                       dims=("y","x"),
-                       coords={"xpix":("x", xpix), "ypix":("y", ypix), 
-                              })
+                       dims=dims,
+                       coords=coords)
                               
     
     arr.attrs["TimeStamp"] = timeparser(image.TimeStamp)
     arr.attrs["transform"] = transform
-    arr.attrs["Label"] = image.Label + " ({})".format(image.Tags["TraceRetrace"])
+    label =  image.Label
+    if not is_RGB:
+        label += " ({})".format(image.Tags["TraceRetrace"])
+    arr.attrs["Label"] = label
     
     arr = arr.assign_coords(ExportSettingsHeightMap.create_coord_dict(image))
     arr = arr.assign_attrs(ExportSettingsHeightMap.create_attr_dict(image))
