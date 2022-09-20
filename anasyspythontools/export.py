@@ -1,6 +1,6 @@
 import xarray as xr
 from collections import namedtuple
-from dateutil.parser import parse as timeparser
+
 import numpy as np
 from collections import namedtuple
 import numbers
@@ -34,7 +34,11 @@ def split_unit_float(value_str):
     return float(num_part)
     
 
-
+def timeparser(timestr):
+    """parses a time string into a numpy.datetime64 object. 
+    This strips the time zone information (because it is easier
+    and timezones are unlikely to matter for AFM images"""
+    return np.datetime64(tstr.split("+")[0])
 
 
 
@@ -44,7 +48,7 @@ class ExportSettingsReg:
         self._attrs= attrs.copy()
         self._coords = coords.copy()
         
-    def add__coord(self, name, type_conversion):
+    def add_coord(self, name, type_conversion):
         self._coords[name] = type_conversion
     
     def del_coord(self, name):
@@ -76,7 +80,7 @@ class ExportSettingsReg:
 
 
 
-_init_height_maps_coords = {"Tags.ScanRate":split_unit_float, "Tags.Setpoint":split_unit_float,
+_init_height_maps_coords = {"Tags.ScanRate":split_unit_float, "Tags.Setpoint":split_unit_float,"Tags.IRWavenumber":split_unit_float, 
         "Tags.IGain":float, "Tags.PGain":float, "Tags.ACDriveEnabled":bool, "Tags.ACDriveFrequency":split_unit_float, 
         "Tags.ACDriveAmplitude":split_unit_float, "TimeStamp":timeparser}
 
