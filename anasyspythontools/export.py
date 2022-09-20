@@ -104,6 +104,61 @@ ExportSettingsRenderedSpectra = ExportSettingsReg(coords = _init_rendered_spectr
 
 
 
+class AttrsCDFify:
+    
+    def __init__(self, attrs_conversion):
+        self._attrs_conversion = attrs_conversion.copy()
+    
+    def _convert_attr(self, name, value, to_cdf=True):
+        sel_converter = 0
+        if not to_cdf:
+            sel_converter = 1
+        if name in self._attrs_conversion:
+            return (name, self._attrs_conversion[name][sel_converter](value))
+        return None
+    
+    def _convert_array(self, array, to_cdf=True):
+        converted = [self._convert_attr(name, value, to_cdf) for name,value in array.attrs.items()]
+        return array.assign_attrs( dict([c for c in converted if c is not None]))
+    
+    
+    def _convert(self, xarray_obj, to_cdf=True):
+        xarray_obj = self._convert_array(xarray_obj, to_cdf)
+        if isinstance(xarray_obj, xr.Dataset):
+            old_attr = xarray_obj.attrs
+            xarray_obj = xarray_obj\
+                            .map(self._convert_array, args=[to_cdf], keep_attrs=False)\
+                            .assign_attrs(old_attr)
+            
+        return xarray_obj
+    
+    def cdfify(self, xarray_obj):
+        """
+        returns an xarray_object that can be stored as netcdf using h5netcdf.
+        """
+        return self._convert(xarray_obj, to_cdf=True)
+    
+    def uncdfify(self, xarray_obj):
+        """
+        undoes changes done by cdfify.
+        """
+        return self._convert(xarray_obj, to_cdf=False)
+    
+    def set_attr(self, name, to_cdf_fun, from_cdf_fun):
+        self._attrs_conversion[name] = [to_cdf_fun, from_cdf_fun]
+        
+    def del_attr(self, name):
+        del self._attrs_conversion[name]
+        
+
+_init_attrscdfify = {"TimeStamp":( str, np.datetime64)}
+
+attrsCDFify = AttrsCDFify(_init_attrscdfify)
+
+cdfify = attrsCDFify.cdfify
+uncdfify = attrsCDFify.uncdfify
+
+
 
 def get_concurrent_images(img_list, matched_attrs=["TimeStamp"], 
                           matched_tags=["TraceRetrace"]):
