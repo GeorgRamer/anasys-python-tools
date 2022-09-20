@@ -38,7 +38,7 @@ def timeparser(timestr):
     """parses a time string into a numpy.datetime64 object. 
     This strips the time zone information (because it is easier
     and timezones are unlikely to matter for AFM images"""
-    return np.datetime64(tstr.split("+")[0])
+    return np.datetime64(timestr.split("+")[0])
 
 
 
