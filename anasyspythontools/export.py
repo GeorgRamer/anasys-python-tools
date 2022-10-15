@@ -79,12 +79,24 @@ class ExportSettingsReg:
         return {k:  v(attrs.get(k,None)) for k,v in self.attrs.items() if k in self.attrs}        
 
 
+_init_height_maps_coords = {
+    "TimeStamp":                    timeparser,
+    "Tags.ScanRate":                split_unit_float, 
+    "Tags.Setpoint":                split_unit_float,
+    "Tags.IGain":                   float,
+    "Tags.PGain":                   float,
+    "Tags.ScanMode":                str,
+    "Tags.TraceRetrace":            str,
+    "Tags.ACDriveEnabled":          bool,
+    "Tags.ACDriveFrequency":        split_unit_float,
+    "Tags.ACDriveAmplitude":        split_unit_float,
+    "Tags.IRWavenumber":            split_unit_float,
+    "Tags.IRAttenuation":           split_unit_float,
+    'Tags.IRPowerMaximizerEnabled': bool,
+    'Tags.IRPolarization':          split_unit_float,
+}
 
-_init_height_maps_coords = {"Tags.ScanRate":split_unit_float, "Tags.Setpoint":split_unit_float,"Tags.IRWavenumber":split_unit_float, 
-        "Tags.IGain":float, "Tags.PGain":float, "Tags.ACDriveEnabled":bool, "Tags.ACDriveFrequency":split_unit_float, 
-        "Tags.ACDriveAmplitude":split_unit_float, "TimeStamp":timeparser}
-
-_init_height_maps_attrs = {"Tags.ScanMode":str, "Tags.TraceRetrace":str}
+_init_height_maps_attrs = {}#"Tags.ScanMode":str, "Tags.TraceRetrace":str}
 
 
 ExportSettingsHeightMap = ExportSettingsReg(coords = _init_height_maps_coords,
