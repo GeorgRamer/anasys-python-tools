@@ -286,6 +286,7 @@ def channel_to_DataArray(channel):
 def spectrum_to_Dataset(spectrum):
     chans = {channel:channel_to_DataArray(spectrum.DataChannels[channel]) for channel in spectrum.DataChannels} 
     chans["Background"] =  xr.DataArray(spectrum.Background.signal, dims=("wavenumbers"), coords=(("wavenumbers", spectrum.Background.wn),))
+    chans["Attenuation"] =  xr.DataArray(spectrum["AttenuationBase64"], dims=("wavenumbers"), coords=(("wavenumbers", spectrum.Background.wn),))
     ds =  xr.Dataset(chans).assign_attrs(ExportSettingsRenderedSpectra.create_attr_dict(spectrum))\
             .assign_coords(ExportSettingsRenderedSpectra.create_coord_dict(spectrum))
 
