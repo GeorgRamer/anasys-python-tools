@@ -296,13 +296,26 @@ def channel_to_DataArray(channel):
 
 
 def spectrum_to_Dataset(spectrum):
-    chans = {channel:channel_to_DataArray(spectrum.DataChannels[channel]) for channel in spectrum.DataChannels} 
+    chans = {channel:channel_to_DataArray(spectrum.DataChannels[channel]) for channel in spectrum.DataChannels}
+    attenuation = spectrum["AttenuationBase64"]
+    for channame, chan in chans.items():
+        if chan.wavenumbers.data.shape == attenuation.shape:
+            wn = list(chans.values())[0].wavenumbers.data
+            chans["Attenuation"] =  xr.DataArray(spectrum["AttenuationBase64"], dims=("wavenumbers"), coords=(("wavenumbers", wn),))
+            break
+    else:
+        # as a fall back: try to make it fit to background
+        if attenuation.shape == spectrum.Background.wn.shape:
+            chans["Attenuation"] =  xr.DataArray(attenuation, dims=("wavenumbers"), coords=(("wavenumbers", spectrum.Background.wn),))
+        else:
+            # and finally, just add nans instead
+            chans["Attenuation"] =  xr.DataArray(spectrum.Background.wn*np.nans, dims=("wavenumbers"), coords=(("wavenumbers", spectrum.Background.wn),))
     chans["Background"] =  xr.DataArray(spectrum.Background.signal, dims=("wavenumbers"), coords=(("wavenumbers", spectrum.Background.wn),))
+    
     ds =  xr.Dataset(chans).assign_attrs(ExportSettingsRenderedSpectra.create_attr_dict(spectrum))\
             .assign_coords(ExportSettingsRenderedSpectra.create_coord_dict(spectrum))
 
     return ds
-
 
 
 def spectra_list_to_Dataset(spectra_list):
