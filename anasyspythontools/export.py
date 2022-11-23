@@ -40,6 +40,12 @@ def timeparser(timestr):
     and timezones are unlikely to matter for AFM images"""
     return np.datetime64(timestr.split("+")[0])
 
+def first_float(arr):
+    """
+    Returns first element of array and makes sure it's a float
+    """
+    return float(arr[0])
+
 
 
 class ExportSettingsReg:
@@ -94,6 +100,7 @@ _init_height_maps_coords = {
     "Tags.IRAttenuation":           split_unit_float,
     'Tags.IRPowerMaximizerEnabled': bool,
     'Tags.IRPolarization':          split_unit_float,
+    'Label':                        str,
 }
 
 _init_height_maps_attrs = {}#"Tags.ScanMode":str, "Tags.TraceRetrace":str}
@@ -104,11 +111,54 @@ ExportSettingsHeightMap = ExportSettingsReg(coords = _init_height_maps_coords,
 
 
 
-_init_rendered_spectra_coords = {'Location.X':float,
-                        'Location.Y':float,
-                        'PulseRate':float,
-                        'TimeStamp':timeparser}
-_init_rendered_spectra_attrs = {'Label':str}
+_init_rendered_spectra_coords = {
+    'Label':              str,
+    'Location.X':         float,
+    'Location.Y':         float,
+    'PulseRate':          float,
+    'TimeStamp':          timeparser,
+    'AFMMode':            str,
+    'AttenuationBase64':  first_float,
+    'BackgroundFileName': str,
+    'BackgroundOption':   str,
+    'Polarization':       str,
+    # 'Background': None,
+    # 'BackgroundID': None,
+    # 'BandPassEnabled': None,
+    # 'BeamShapeFactorBase64': None,
+    # 'ChannelZero': None,
+    # 'CoAverages': None,
+    # 'DataChannels': None,
+    # 'DataPoints': None,
+    # 'DetectorGain': None,
+    # 'DigitalGain': None,
+    # 'DutyCycle': None,
+    # 'EndWavenumber': None,
+    # 'FreqRMSZero': None,
+    # 'FreqWindowData': None,
+    # 'FreqWindowMaps': None,
+    # 'FrequencySearchLocation': None,
+    # 'FrequencySearchWidth': None,
+    # 'Lockin2AmpZero': None,
+    # 'Lockin2RTAmpZero': None,
+    # 'LockinAmpZero': None,
+    # 'LockinRTAmpZero': None,
+    # 'OAPFocusPos': None,
+    # 'OffsetWavenumber': None,
+    # 'PeakIZero': None,
+    # 'PeakZero': None,
+    # 'PowerMaximizerEnabled': None,
+    # 'ProbePower': None,
+    # 'PulseRate': None,
+    # 'RMSZero': None,
+    # 'RotaryPolarizerMotorPositionBase64': None,
+    # 'SampleRate': None,
+    # 'SampleSize': None,
+    # 'StageZPos': None,
+}
+
+
+_init_rendered_spectra_attrs = {}
 
 
 ExportSettingsRenderedSpectra = ExportSettingsReg(coords = _init_rendered_spectra_coords,
