@@ -37,8 +37,12 @@ def split_unit_float(value_str):
 def timeparser(timestr):
     """parses a time string into a numpy.datetime64 object. 
     This strips the time zone information (because it is easier
-    and timezones are unlikely to matter for AFM images"""
-    return np.datetime64(timestr.split("+")[0])
+    and timezones are unlikely to matter for AFM images.
+    """
+    
+    # This code forces nanosecond resolution (although not)
+    # provided by the AFM, because that is required by xarray
+    return np.datetime64(timestr.split("+")[0], 'ns')
 
 def first_float(arr):
     """
