@@ -9,8 +9,11 @@ from . import anasysio
 __version__ = "0.4.1"
 
 def read(fn):
-    fr = anasysio.AnasysFileReader(fn)
+    try: 
+        fr = anasysio.AnasysFileReader(fn)
+    except FileNotFoundError as e:
+        raise FileNotFoundError("File not found: " + fn) from e
     if fr._filetype == "full":
-    	return anasysdoc.AnasysDoc(fr._doc)
+        return anasysdoc.AnasysDoc(fr._doc)
     if fr._filetype == "bg":
-    	return irspectra.Background(fr._doc)
+        return irspectra.Background(fr._doc)
