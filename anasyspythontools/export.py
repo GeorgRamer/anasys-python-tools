@@ -325,7 +325,7 @@ def imagelist_to_Dataset(image_list):
     
     returns xarray.Dataset with dims xpix and ypix and coordinates xy of the image position"""
     data_vars = [image_to_DataArray(img, True) for img in image_list]
-    return xr.Dataset(data_vars=dict(data_vars), attrs=data_vars[0][1].attrs.copy())
+    return xr.Dataset(data_vars=dict(data_vars), coords=data_vars[0][1].coords.copy(), attrs=data_vars[0][1].attrs.copy())
 
 
 def attr_to_DataArray(spectrum):
