@@ -336,7 +336,11 @@ class AnasysElement(object):
                 if isinstance(v1, np.ndarray) or isinstance(v2, np.ndarray):
                     if (v1!=v2).any():
                         return False
-                elif not (v1 == v2) and not ( callable(v1) and callable(v2)):
+                if type(v1) == dict:
+                    if type(v2) != dict:
+                        return False
+                    return np.all([np.all(v1[k] == v2[k]) for k in v1])                    
+                elif not np.all(v1 == v2) and not ( callable(v1) and callable(v2)):
                     print(v1, v2)
                     return False
         return True
