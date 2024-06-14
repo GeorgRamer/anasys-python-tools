@@ -168,7 +168,7 @@ class Background(anasysfile.AnasysElement):
         vstart = float(self.StartWavenumber)
         vlen = len(self.Table)
         vres = self.IRSweepResolution
-        if vres['{http://www.w3.org/2001/XMLSchema-instance}nil']:
+        if not isinstance(vres, str) and vres['{http://www.w3.org/2001/XMLSchema-instance}nil']:
             vend = float(self.EndWavenumber)
             return np.linspace(vstart, vend, vlen)
         else:
