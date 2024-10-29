@@ -186,7 +186,7 @@ class AnasysElement(object):
         """Check if key is in dict. If it is, increment key until key is unique, and return"""
         if key not in _dict:
             return key
-        num_list = re.findall('\s\((\d+)\)', key)
+        num_list = re.findall(r'\s\((\d+)\)', key)
         if num_list != [] and key[-1] == ')':
             copy = int(num_list[-1])
         index = key.find(' ({})'.format(copy))

@@ -30,7 +30,7 @@ def split_unit_float(value_str):
         return value_str
     if value_str is None or value_str=="":
         return float("nan")
-    num_part = re.split("[\s%]+", value_str.strip(" "))[0]
+    num_part = re.split(r"[\s%]+", value_str.strip(" "))[0]
     return float(num_part)
     
 
