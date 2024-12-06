@@ -30,15 +30,25 @@ def split_unit_float(value_str):
         return value_str
     if value_str is None or value_str=="":
         return float("nan")
-    num_part = re.split("[\s%]+", value_str.strip(" "))[0]
+    num_part = re.split(r"[\s%]+", value_str.strip(" "))[0]
     return float(num_part)
     
 
 def timeparser(timestr):
     """parses a time string into a numpy.datetime64 object. 
     This strips the time zone information (because it is easier
-    and timezones are unlikely to matter for AFM images"""
-    return np.datetime64(timestr.split("+")[0])
+    and timezones are unlikely to matter for AFM images.
+    """
+    
+    # This code forces nanosecond resolution (although not)
+    # provided by the AFM, because that is required by xarray
+    return np.datetime64(timestr.split("+")[0], 'ns')
+
+def first_float(arr):
+    """
+    Returns first element of array and makes sure it's a float
+    """
+    return float(arr[0])
 
 
 
@@ -79,12 +89,25 @@ class ExportSettingsReg:
         return {k:  v(attrs.get(k,None)) for k,v in self.attrs.items() if k in self.attrs}        
 
 
+_init_height_maps_coords = {
+    "TimeStamp":                    timeparser,
+    "Tags.ScanRate":                split_unit_float, 
+    "Tags.Setpoint":                split_unit_float,
+    "Tags.IGain":                   float,
+    "Tags.PGain":                   float,
+    "Tags.ScanMode":                str,
+    "Tags.TraceRetrace":            str,
+    "Tags.ACDriveEnabled":          bool,
+    "Tags.ACDriveFrequency":        split_unit_float,
+    "Tags.ACDriveAmplitude":        split_unit_float,
+    "Tags.IRWavenumber":            split_unit_float,
+    "Tags.IRAttenuation":           split_unit_float,
+    'Tags.IRPowerMaximizerEnabled': bool,
+    'Tags.IRPolarization':          split_unit_float,
+    'Label':                        str,
+}
 
-_init_height_maps_coords = {"Tags.ScanRate":split_unit_float, "Tags.Setpoint":split_unit_float,"Tags.IRWavenumber":split_unit_float, 
-        "Tags.IGain":float, "Tags.PGain":float, "Tags.ACDriveEnabled":bool, "Tags.ACDriveFrequency":split_unit_float, 
-        "Tags.ACDriveAmplitude":split_unit_float, "TimeStamp":timeparser}
-
-_init_height_maps_attrs = {"Tags.ScanMode":str, "Tags.TraceRetrace":str}
+_init_height_maps_attrs = {}#"Tags.ScanMode":str, "Tags.TraceRetrace":str}
 
 
 ExportSettingsHeightMap = ExportSettingsReg(coords = _init_height_maps_coords,
@@ -92,11 +115,54 @@ ExportSettingsHeightMap = ExportSettingsReg(coords = _init_height_maps_coords,
 
 
 
-_init_rendered_spectra_coords = {'Location.X':float,
-                        'Location.Y':float,
-                        'PulseRate':float,
-                        'TimeStamp':timeparser}
-_init_rendered_spectra_attrs = {'Label':str}
+_init_rendered_spectra_coords = {
+    'Label':              str,
+    'Location.X':         float,
+    'Location.Y':         float,
+    'PulseRate':          float,
+    'TimeStamp':          timeparser,
+    'AFMMode':            str,
+    'AttenuationBase64':  first_float,
+    'BackgroundFileName': str,
+    'BackgroundOption':   str,
+    'Polarization':       str,
+    # 'Background': None,
+    # 'BackgroundID': None,
+    # 'BandPassEnabled': None,
+    # 'BeamShapeFactorBase64': None,
+    # 'ChannelZero': None,
+    # 'CoAverages': None,
+    # 'DataChannels': None,
+    # 'DataPoints': None,
+    # 'DetectorGain': None,
+    # 'DigitalGain': None,
+    # 'DutyCycle': None,
+    # 'EndWavenumber': None,
+    # 'FreqRMSZero': None,
+    # 'FreqWindowData': None,
+    # 'FreqWindowMaps': None,
+    # 'FrequencySearchLocation': None,
+    # 'FrequencySearchWidth': None,
+    # 'Lockin2AmpZero': None,
+    # 'Lockin2RTAmpZero': None,
+    # 'LockinAmpZero': None,
+    # 'LockinRTAmpZero': None,
+    # 'OAPFocusPos': None,
+    # 'OffsetWavenumber': None,
+    # 'PeakIZero': None,
+    # 'PeakZero': None,
+    # 'PowerMaximizerEnabled': None,
+    # 'ProbePower': None,
+    # 'PulseRate': None,
+    # 'RMSZero': None,
+    # 'RotaryPolarizerMotorPositionBase64': None,
+    # 'SampleRate': None,
+    # 'SampleSize': None,
+    # 'StageZPos': None,
+}
+
+
+_init_rendered_spectra_attrs = {}
 
 
 ExportSettingsRenderedSpectra = ExportSettingsReg(coords = _init_rendered_spectra_coords,
@@ -259,7 +325,7 @@ def imagelist_to_Dataset(image_list):
     
     returns xarray.Dataset with dims xpix and ypix and coordinates xy of the image position"""
     data_vars = [image_to_DataArray(img, True) for img in image_list]
-    return xr.Dataset(data_vars=dict(data_vars), attrs=data_vars[0][1].attrs.copy())
+    return xr.Dataset(data_vars=dict(data_vars), coords=data_vars[0][1].coords.copy(), attrs=data_vars[0][1].attrs.copy())
 
 
 def attr_to_DataArray(spectrum):

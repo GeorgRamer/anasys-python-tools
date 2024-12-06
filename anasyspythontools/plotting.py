@@ -292,7 +292,7 @@ def imshow_transformable(X, cmap=None, norm=None, aspect=None,
         if aspect is None:
             aspect = matplotlib.rcParams['image.aspect']
         self.set_aspect(aspect)
-        im = TransformableAxesImage(self, cmap, norm, interpolation, origin, extent,
+        im = TransformableAxesImage(self, cmap=cmap, norm=norm, interpolation=interpolation, origin=origin, extent=extent,
                               filternorm=filternorm, filterrad=filterrad,
                               resample=resample,datatransform=datatransform, **kwargs)
 

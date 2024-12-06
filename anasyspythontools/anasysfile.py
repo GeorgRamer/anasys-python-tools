@@ -186,7 +186,7 @@ class AnasysElement(object):
         """Check if key is in dict. If it is, increment key until key is unique, and return"""
         if key not in _dict:
             return key
-        num_list = re.findall('\s\((\d+)\)', key)
+        num_list = re.findall(r'\s\((\d+)\)', key)
         if num_list != [] and key[-1] == ')':
             copy = int(num_list[-1])
         index = key.find(' ({})'.format(copy))
@@ -336,7 +336,11 @@ class AnasysElement(object):
                 if isinstance(v1, np.ndarray) or isinstance(v2, np.ndarray):
                     if (v1!=v2).any():
                         return False
-                elif not (v1 == v2) and not ( callable(v1) and callable(v2)):
+                if type(v1) == dict:
+                    if type(v2) != dict:
+                        return False
+                    return np.all([np.all(v1[k] == v2[k]) for k in v1])                    
+                elif not np.all(v1 == v2) and not ( callable(v1) and callable(v2)):
                     print(v1, v2)
                     return False
         return True

@@ -165,7 +165,16 @@ class Background(anasysfile.AnasysElement):
     
     @property
     def wn(self):
-        return float(self.StartWavenumber) + np.arange(len(self.Table)) * float(self.IRSweepResolution)
+        vstart = float(self.StartWavenumber)
+        vlen = len(self.Table)
+        vres = self.IRSweepResolution
+        if not isinstance(vres, str) and vres['{http://www.w3.org/2001/XMLSchema-instance}nil']:
+            vend = float(self.EndWavenumber)
+            return np.linspace(vstart, vend, vlen)
+        else:
+            vres = float(vres)
+            return vstart + np.arange(vlen) * vres
+        # return float(self.StartWavenumber) + np.arange(len(self.Table)) * float(self.IRSweepResolution)
     
     @property
     def signal(self):

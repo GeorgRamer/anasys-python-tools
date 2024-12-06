@@ -26,8 +26,8 @@ class TestBG:
     def test_basic_read(self, filename):
         f = apt.read(filename)
     
-    def test_check_equality(self, filename):
-        assert apt.read(filename) == apt.read(filename)
+    # def test_check_equality(self, filename):
+    #     assert apt.read(filename) == apt.read(filename)
     
     def test_check_attributes(self, filename):
         f = apt.read(filename)

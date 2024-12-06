@@ -102,7 +102,7 @@ def accordion_list(list_of_elements):
           });
         }
         </script>"""
-    header = re.sub("\{uuid\}", unique_str, header)
+    header = re.sub(r"\{uuid\}", unique_str, header)
         
     content = [element.format(title=title, content=content,uuid=unique_str) for title, content in list_of_elements]
     return header + "\n".join(content)

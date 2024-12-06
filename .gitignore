@@ -25,3 +25,6 @@ scratch.py
 # Sphinx documentation #
 docs/_static
 docs/_build
+
+# Pipenv
+Pipfile.lock
