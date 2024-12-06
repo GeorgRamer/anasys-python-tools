@@ -24,9 +24,9 @@ def unstack_ds_vars(array,replace_dict , new_dim_name=None):
         new_dim_name = "variable"
     ds = array.to_dataset(new_dim_name)
     def renamer(var):
-        return var.swap_dims(replace_dict[x.name])
+        return var.swap_dims(replace_dict[var.name])
     
-    return ds.map(rename)
+    return ds.map(renamer)
 
 
 
