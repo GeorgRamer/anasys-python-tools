@@ -8,6 +8,7 @@
 ehthumbs.db
 Thumbs.db
 dist/*
+sdist/*
 
 # Other #
 #########
@@ -28,3 +29,7 @@ docs/_build
 
 # Pipenv
 Pipfile.lock
+
+
+# Hatch
+.coverage

@@ -52,7 +52,7 @@ dependencies = ["scipy>=1.9.1",
                 "matplotlib-scalebar>=0.8.1",
                 "numpy>=1.22",
                 "xarray>=2022.6.0",
-                "IPython"]
+                "IPython>=7.0"]
 
 [project.urls]
 Homepage = "https://github.com/GeorgRamer/anasys-python-tools"
@@ -62,5 +62,44 @@ path = "anasyspythontools/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "/anasyspythontools",
+    "anasyspythontools/*.py",
 ]
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["anasyspythontools"]
+
+[tool.hatch.envs.test]
+dependencies = ["coverage[toml]",
+                "pytest",
+                "pytest-cov"]
+
+[tool.hatch.envs.check]
+detached = true
+dependencies = [
+  "flake8",
+  "black",
+  "isort"
+  ]
+
+
+[tool.hatch.envs.style.scripts]
+
+syntax = "flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics"
+
+check = [
+  "flake8 .",
+  "black --check --diff .",
+  "isort --check-only --diff .",
+]
+fmt = [
+  "isort .",
+  "black .",
+  "check",
+]
+
+
+
+[tool.hatch.envs.test.scripts]
+run-coverage = "pytest --cov-config=pyproject.toml --cov=anasyspythontools --cov=tests"
+run = "run-coverage --no-cov"
