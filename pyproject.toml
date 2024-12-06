@@ -15,6 +15,7 @@ license = "MIT"
 requires-python = ">=3.8"
 authors = [
     { name = "Georg Ramer", email = "georg.ramer@tuwien.ac.at" },
+    { name = "Wouter Duverger", email = "wouter.duverger@kuleuven.be" },
     { name = "Cody Schindler", email = "cschindler@anasysinstruments.com" },
 ]
 keywords = [
@@ -30,7 +31,7 @@ keywords = [
     "hyperspectral",
     "infrared",
     "microscope",
-    "microscope",
+    "AFM-IR",
     "microscopy",
     "s-snom",
     "spectra",
@@ -49,8 +50,9 @@ classifiers = [
 dependencies = ["scipy>=1.9.1",
                 "matplotlib>=3.5.3",
                 "matplotlib-scalebar>=0.8.1",
-                "numpy>=1.23.2",
-                "xarray>=2022.6.0"]
+                "numpy>=1.22",
+                "xarray>=2022.6.0",
+                "IPython"]
 
 [project.urls]
 Homepage = "https://github.com/GeorgRamer/anasys-python-tools"

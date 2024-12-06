@@ -6,7 +6,7 @@ from . import irspectra
 from . import anasysio
 
 
-__version__ = "0.4.1"
+__version__ = "0.5.0"
 
 def read(fn):
     try: 
