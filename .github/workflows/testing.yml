@@ -15,11 +15,9 @@ jobs:
     runs-on: [linux, self-hosted]
     strategy:
       fail-fast: false
-
-
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 
       uses: actions/setup-python@v4
       with:
         python-version: "3.12"
@@ -28,13 +26,10 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         pip install hatchling
-
-        
     - name: Lint and format check
       run: |
         # stop the build if there are Python syntax errors or undefined names
         hatch env run -e style syntax
-
     - name: Test with pytest
       run: |
         hatch test -a -c
