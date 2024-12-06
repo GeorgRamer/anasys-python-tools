@@ -26,7 +26,7 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         pip3 install hatchling
-      - name: Test with pytest
+    - name: Test with pytest
       run: |
         hatch test -a -c
     - name: Lint and format check
