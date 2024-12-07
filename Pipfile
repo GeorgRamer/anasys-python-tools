@@ -17,7 +17,7 @@ jupyter = "*"
 jupyterlab = "*"
 ipympl = "*"
 xarray = "*"
-hatchling = ">=1.8.1"
+hatch = ">=1.8.1"
 
 [requires]
 python_version = "3.12"
