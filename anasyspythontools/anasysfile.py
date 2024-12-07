@@ -326,11 +326,11 @@ class AnasysElement(object):
                 parent_etree.append(new_elem)
     
     def __eq__(self, other):
-        print("__eq__ called")
         for attr in set(dir(self) + dir(other)):
             v1, v2 = [getattr(obj, attr, None) for obj in [self, other]]
+            if v1 is None and v2 is None: 
+                return True
             if v1 is None or v2 is None:
-                print(v1, v2)
                 return False
             else:
                 if isinstance(v1, np.ndarray) or isinstance(v2, np.ndarray):
