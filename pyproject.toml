@@ -78,7 +78,7 @@ dependencies = ["coverage[toml]",
                 "pytest",
                 "pytest-cov"]
 
-[tool.hatch.envs.check]
+[tool.hatch.envs.style]
 skip-install = true
 dependencies = [
   "flake8",
